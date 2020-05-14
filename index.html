@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>OL-deltagande</title>
+	<link href="lib/css/bootstrap_4.4.1_css_bootstrap.min.css" rel="stylesheet">
+	<link rel="icon" href="lib/img/favicon.ico">
+	<link rel="apple-touch-icon" href="lib/img/favicon.ico">
+	<script
+	src="https://code.jquery.com/jquery-3.3.1.min.js"
+	integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+	crossorigin="anonymous"></script>
+	<style>
+		textarea.noscrollbars {
+			overflow: hidden;
+			width: 300px;
+			height: 200px;
+		}
+		tr.runner.out td.name {
+			color: #ffc107;
+		}
+		tr.runner.home td.name {
+			color: #28a745;
+		}
+		tr.runner.nothere td.name {
+			color: #6c757d;
+		}
+		tr.runner td.disabled {
+			color: #6c757d;	
+		}
+		/*tr.runner.nothere td small {
+			color: #ee1111;
+		}*/
+	</style>
+</head>
+<body>
+
+	<nav class="navbar navbar-expand-sm navbar-dark" style="background-color: #3f9049;">
+		<a class="navbar-brand" href="#">SFK OL</a>
+		<button class="navbar-toggler text-white" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon text-white"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav">
+				<li class="nav-item active" id="overviewNav">
+					<a class="nav-link" href="#" onclick="toggleView('overview');return false;">Närvaro</a>
+				</li>
+				<li class="nav-item" id="settingsNav">
+					<a class="nav-link" href="#" onclick="toggleView('settings');return false;">Inställningar</a>
+				</li>
+			</ul>
+		</div>
+	</nav>
+
+	<div id="overviewContainer">
+
+		<table class="table table-sm table-striped table-dark" id="overviewTable">
+		<thead class="thead-dark">
+			<tr>
+				<th scope="col">Namn</th>
+				<th class="text-center">Här</th>
+				<th class="text-center">Ut/In</th>
+			</tr>
+		</thead>
+		<tbody id="personList">
+		</tbody>
+		</table>
+
+	</div>
+
+	<div id="settingsContainer" class="p-2">
+		<!--<div id="classes">
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<span class="input-group-text">Banor</span>
+				</div>
+				<textarea id="banorData" class="form-control" aria-label="Banor"></textarea>
+			</div>
+		</div>-->
+		<h5 class="my-2">Personer att hantera</h5>
+		<div id="names">
+			<div class="input-group">
+				<textarea id="personData" class="form-control noscrollbars" aria-label="Personer" placeholder="Namn;Klass" onkeyup="autoGrow(this);"></textarea>
+			</div>
+		</div>
+		<small class="form-text text-muted">En person per rad. Lägg till semikolon (;) för att ange eventuell klass/notering (Ex: "Leif Andersson;Gul")</small>
+
+		<!--<small class="form-text text-muted">En person per rad. Förändring i textrutan ovan rensar alla ifylld händelser i närvaroöversikten! Lägg till ev. övriga personer nedan istället.</small>-->
+		<!--<div class="row d-flex flex-row-reverse p-2">
+			<button type="button" class="btn btn-primary mr-2">Spara</button>
+			<button type="button" class="btn btn-secondary mr-2">Avbryt</button>
+		</div>-->
+
+		<h5 class="my-2">Inställningar</h5>
+		<div class="custom-control custom-switch mt-2">
+			<input type="checkbox" class="custom-control-input" id="settingsDetails">
+			<label class="custom-control-label" for="settingsDetails">Visa klasser</label>
+		</div>
+		<div class="custom-control custom-switch mt-2">
+			<input type="checkbox" class="custom-control-input" id="settingsLargeTable">
+			<label class="custom-control-label" for="settingsLargeTable">Visa liten tabell</label>
+		</div>
+
+		<div class="row d-flex flex-row-reverse align-items-center p-2">
+			<button type="button" class="btn btn-primary mr-2" id="export" onclick="exportData();">Exportera</button>
+			<small id="exportMessage" class="text-muted invisible mr-2">Närvarande personer har kopierats till urklipp - så du kan nu klistra in det i ett meddelande, mejl etc.</small>
+		</div>
+		<textarea class="invisible" id="exportData"></textarea>
+
+		<!--<textarea id="debugPersonData" class="form-control mt-5" readonly></textarea>-->
+
+		<!--<h5 class="my-2">Lägg till person</h5>
+		<div id="addPerson">
+			<div class="input-group">
+				<textarea id="personData" class="form-control" aria-label="Person" ></textarea>
+			</div>
+		</div>-->
+
+
+	</div>
+
+	<script src="lib/js/bootstrap.4.4.1.min.js"></script>
+	<script src="lib/js/purify.min.js"></script>
+	<script src="lib/js/moment.js"></script>
+	<script src="lib/js/locale/sv.js" charset="UTF-8"></script>
+	<script>
+		'use strict';
+
+		moment.locale('sv');
+		let safe = DOMPurify.sanitize
+
+		let data = {
+			persons: []
+		}
+
+		const checkIcon = '<svg class="bi bi-check mr-2 text-success" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
+				<path fill-rule="evenodd" d="M13.854 3.646a.5.5 0 010 .708l-7 7a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L6.5 10.293l6.646-6.647a.5.5 0 01.708 0z" clip-rule="evenodd"/>\
+			</svg>'
+		const noCheckIcon = '<svg class="bi bi-x mr-2 text-danger" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
+				<path fill-rule="evenodd" d="M11.854 4.146a.5.5 0 010 .708l-7 7a.5.5 0 01-.708-.708l7-7a.5.5 0 01.708 0z" clip-rule="evenodd"/>\
+				<path fill-rule="evenodd" d="M4.146 4.146a.5.5 0 000 .708l7 7a.5.5 0 00.708-.708l-7-7a.5.5 0 00-.708 0z" clip-rule="evenodd"/>\
+			</svg>'
+		const personHereIcon = '<svg class="bi bi-person-check-fill text-success" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
+				<path fill-rule="evenodd" d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zm5-6a3 3 0 100-6 3 3 0 000 6zm9.854-2.854a.5.5 0 010 .708l-3 3a.5.5 0 01-.708 0l-1.5-1.5a.5.5 0 01.708-.708L12.5 7.793l2.646-2.647a.5.5 0 01.708 0z" clip-rule="evenodd"/>\
+			</svg>'
+
+		const personRunningIcon = '<svg class="bi bi-compass text-warning" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
+			  <path fill-rule="evenodd" d="M8 15.016a6.5 6.5 0 100-13 6.5 6.5 0 000 13zm0 1a7.5 7.5 0 100-15 7.5 7.5 0 000 15z" clip-rule="evenodd"/>\
+			  <path d="M6 1a1 1 0 011-1h2a1 1 0 010 2H7a1 1 0 01-1-1zm.94 6.44l4.95-2.83-2.83 4.95-4.95 2.83 2.83-4.95z"/>\
+			</svg>'
+
+		const returnIcon = '<svg class="bi bi-bullseye text-success" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
+			  <path fill-rule="evenodd" d="M8 13A5 5 0 108 3a5 5 0 000 10zm0 1A6 6 0 108 2a6 6 0 000 12z" clip-rule="evenodd"/>\
+			  <path fill-rule="evenodd" d="M8 11a3 3 0 100-6 3 3 0 000 6zm0 1a4 4 0 100-8 4 4 0 000 8z" clip-rule="evenodd"/>\
+			</svg>'
+
+		const personUnknownIcon = '<svg class="bi bi-question" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
+				<path d="M5.25 6.033h1.32c0-.781.458-1.384 1.36-1.384.685 0 1.313.343 1.313 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.007.463h1.307v-.355c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.326 0-2.786.647-2.754 2.533zm1.562 5.516c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>\
+			</svg>'
+
+		const personUnknownIconOld = '<svg class="bi bi-person text-warning" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
+				<path fill-rule="evenodd" d="M13 14s1 0 1-1-1-4-6-4-6 3-6 4 1 1 1 1h10zm-9.995-.944v-.002.002zM3.022 13h9.956a.274.274 0 00.014-.002l.008-.002c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664a1.05 1.05 0 00.022.004zm9.974.056v-.002.002zM8 7a2 2 0 100-4 2 2 0 000 4zm3-2a3 3 0 11-6 0 3 3 0 016 0z" clip-rule="evenodd"/>\
+			</svg>'
+		const personNotHereIcon = '<svg class="bi bi-person-dash-fill text-danger" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
+				<path fill-rule="evenodd" d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zm5-6a3 3 0 100-6 3 3 0 000 6zm5-.5a.5.5 0 01.5-.5h4a.5.5 0 010 1h-4a.5.5 0 01-.5-.5z" clip-rule="evenodd"/>\
+			</svg>'
+
+		// Eventor selector
+		// document.querySelectorAll("#main h3 ~ table tbody tr:nth-child(1n+1) td:nth-child(-n+2)")
+
+		let eventorPersons = () => {
+			let result = ""
+			let list = document.querySelectorAll("#main h3 ~ table tbody tr:nth-child(1n+1) td:nth-child(-n+2)")
+			for (let i = 0; i < list.length; i+=2) {
+				//copyItems.push(items[i])
+				result += list[i] + ";" + list[i+1] + "\n"
+			}
+			console.log(result)
+		}
+
+/*
+Per Söderberg;Gul 2,3 km
+Hugo Alm;Orange 3,7 km
+Einar Beckman;Orange 3,7 km
+Anders Björklund;Orange 3,7 km
+Noah Björklund;Orange 3,7 km
+Helena Björkman;Orange 3,7 km
+Anton Edvardsson;Orange 3,7 km
+Annika Göök;Orange 3,7 km
+Hannes Göök;Orange 3,7 km
+Emelina Holmqvist;Orange 3,7 km
+Malin Lemurell;Orange 3,7 km
+Helena Lundqvist;Orange 3,7 km
+Katarina Nilsson;Orange 3,7 km
+Eric Olofsson;Orange 3,7 km
+Julia Svarfvar;Orange 3,7 km
+Klara Wedberg-Kilnäs;Orange 3,7 km
+Fabian Alinder;Svart 5,0 km
+Ingrid Alinder;Svart 5,0 km
+Linus Alinder;Svart 5,0 km
+Magnus Alinder;Svart 5,0 km
+Axel Björkman;Svart 5,0 km
+Claes Björkman;Svart 5,0 km
+Hannes Essunger;Svart 5,0 km
+Adam Granhage;Svart 5,0 km
+Ola Göök;Svart 5,0 km
+Magnus Hammarqvist;Svart 5,0 km
+Johan Hjelmér;Svart 5,0 km
+Ebbe Holmqvist;Svart 5,0 km
+Maria Holmqvist;Svart 5,0 km
+Wilmer Holmqvist;Svart 5,0 km
+Isak Lemurell;Svart 5,0 km
+Stefan Lemurell;Svart 5,0 km
+Maria Logren;Svart 5,0 km
+Mats Logren;Svart 5,0 km
+Jonas Lundqvist;Svart 5,0 km
+Signe Lundqvist;Svart 5,0 km
+Emilia Lundstedt;Svart 5,0 km
+Olivia Lundstedt;Svart 5,0 km
+Annika Oskarsson;Svart 5,0 km
+Linnea Oskarsson;Svart 5,0 km
+Lukas Randåker;Svart 5,0 km
+Simon Sahlin;Svart 5,0 km
+Oskar Svarfvar;Svart 5,0 km
+Hans Wedberg;Svart 5,0 km
+Linnea Wedberg-Kilnäs;Svart 5,0 km
+Tove Wedberg-Kilnäs;Svart 5,0 km
+Noah Hedenblom;Svart 5,0 km
+*/
+
+		let parseLine = (line) => {
+			if(line != "") {
+				line = line.trim()
+				if (line.includes(";")) {
+					return line.split(';')
+				} else {
+					return [line, ""]
+				}
+			}
+		}
+
+		let isPersonHere = (el) => { return el.getAttribute("data-here-status") == "here" }
+		let isPersonNotHere = (el) => { return el.getAttribute("data-here-status") == "nothere" }
+		let isPersonUnknown = (el) => { return el.getAttribute("data-here-status") == "unknown" }
+		let setPersonHere = (el) => {
+			el.setAttribute("data-here-status", "here")
+			el.innerHTML = personHereIcon
+		}
+		let setPersonNotHere = (el) => {
+			el.setAttribute("data-here-status", "nothere")
+			$(el).parent().toggleClass("nothere", true)
+			$(el).parent().find("td small").toggleClass("d-none", true)
+			$(el).parent().find("td.run").toggleClass("disabled", true)
+			el.innerHTML = personNotHereIcon
+		}
+		let setPersonUnknown = (el) => {
+			el.setAttribute("data-here-status", "unknown")
+			$(el).parent().toggleClass("nothere", false)
+			$(el).parent().find("td small").toggleClass("d-none", false)
+			$(el).parent().find("td.run").toggleClass("disabled", false)
+			el.innerHTML = personUnknownIcon
+		}
+
+		let changePersonStatus = (el) => {
+			//console.log(el)
+			let status = el.getAttribute("data-here-status")
+			//console.log("Here: " + status)
+			if(status == "unknown") {
+				setPersonHere(el)
+			} else if(status == "here") {
+				setPersonNotHere(el)
+			} else {
+				setPersonUnknown(el)
+			}
+		}
+		let changeRunStatus = (el) => {
+			let status = el.getAttribute("data-run-status")
+			//console.log("Running: " + status)
+			if(status == "unknown") {
+				el.setAttribute("data-run-status", "out")
+				$(el).parent().toggleClass("out", true)
+				el.innerHTML = personRunningIcon
+				let statusEl = $(el).parent().find("td.status")[0]
+				if(isPersonUnknown(statusEl)) {
+					setPersonHere(statusEl)
+				}
+			} else if(status == "out") {
+				el.setAttribute("data-run-status", "home")
+				$(el).parent().toggleClass("out", false)
+				$(el).parent().toggleClass("home", true)
+				el.innerHTML = returnIcon
+			} else {
+				el.setAttribute("data-run-status", "unknown")
+				$(el).parent().toggleClass("home", false)
+				el.innerHTML = personUnknownIcon
+			}
+		}
+
+		let exportData = () => {
+			let personList = document.querySelectorAll("#personList tr td.status")
+
+			let here = ""
+			personList.forEach((el) => {
+				if(isPersonHere(el)) {
+
+					//var regex = /(<([^>]+)>)/ig;
+					//,   body = "<p>test</p>"
+					//,   result = body.replace(regex, "");
+					let elName = $(el).parent().find("td.name")[0]
+					const indexOfFirst = elName.innerHTML.indexOf("<");
+					//let str = $(el).parent().find("td.name")[0].innerHTML.slice(0, indexOfFirst)
+					here += elName.innerHTML.slice(0, indexOfFirst) + "\n"
+					console.log("adding " + elName.innerHTML.slice(0, indexOfFirst) + "\n")
+				} else {
+					//console.log(el.innerHTML)
+				}
+			});
+
+			
+
+			let ed = document.getElementById("exportData")
+			$(ed).toggleClass("invisible", false);
+			ed.value = here;
+			ed.select();
+    		document.execCommand('copy');
+			$(ed).toggleClass("invisible", true);
+
+    		//document.getElementById("exportMessage")
+    		$("#exportMessage").toggleClass("invisible", false);
+    		setTimeout(function() { 
+    			$("#exportMessage").toggleClass("invisible", true);
+    		}, 3000);
+
+// Bookmarklet
+//		document.getElementById("page-data").onclick = function() {
+//			this.select();
+//			document.execCommand('copy');	
+//		} 
+
+			//let copyText = document.getElementById("exportData");
+
+			/* Select the text field */
+			//copyText.select();
+			//copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+
+			/* Copy the text inside the text field */
+			//document.execCommand("copy");
+			//alert("Data kopierad")
+		}
+
+		// Display people and their status
+		let _displayOverview = (data) => {
+			//console.log("_displayOverview")
+
+			//console.log(document.getElementById("settingsDetails").checked)
+			
+			$("#overviewTable").toggleClass("table-sm", document.getElementById("settingsLargeTable").checked)
+
+			let html = ""
+			let personLines = getPersonData().split("\n").sort();
+			personLines.forEach((line, idx) => {
+				let data = parseLine(line)
+				//console.log(data)
+				if(data) {
+					html += '<tr class="runner">\
+						<td class="name">' + data[0] + (document.getElementById("settingsDetails").checked ? '<small class="text-muted d-block-lg ml-1">' + data[1] +	'</small>': '') + '</td>\
+						<td class="status text-center" style="cursor: pointer;" data-here-status="unknown" onclick="changePersonStatus(this)">' + personUnknownIcon + '</td>\
+						<td class="run text-center" style="cursor: pointer;" data-run-status="unknown" onclick="changeRunStatus(this)">' + personUnknownIcon + '</td>\
+					</tr>'	
+				}
+			})
+			document.getElementById("personList").innerHTML = html
+		}
+		let _displaySettings = () => {
+			//console.log("_displaySettings")
+		}
+
+		let toggleView = (view) => {
+			state.toggleView(view)
+		}
+
+		let safeEncode = (decoded) => {return window.btoa(safe(decoded))}
+		let safeDecode = (encoded) => {return safe(window.atob(encoded))}
+
+		const VIEWS = {
+			OVERVIEW: "overview", // View for persons
+			SETTINGS: "settings"	// Settings, export/import
+		}
+
+		let setPersonDataAttr = (attribute, value) => {
+			let personData = document.getElementById("personData")
+			personData.setAttribute(attribute, safeEncode(value))
+		}
+		let getPersonDataAttr = (attribute) => {
+			return safeDecode(document.getElementById("personData").getAttribute(attribute))
+		}
+		// Get cached data from DOM
+		let getPersonDataCache = () => {
+			return getPersonDataAttr("data-person-list")
+		}
+		// Get current data from textarea
+		let getPersonData = () => {
+			return document.getElementById("personData").value
+		}
+
+		// State controller
+		let state = {
+			_view: VIEWS.OVERVIEW,
+			_data: "",
+			toggleView: (view) => {
+				if(view == "settings") {
+
+					// Save copy of persondata
+					setPersonDataAttr("data-person-list", personData.value)
+
+					state.viewSettings();
+				} else {
+					// Overview
+
+					// Load persondata from settings
+					let personDataCached = getPersonDataCache();
+					let personData = document.getElementById("personData").value
+					if(personDataCached != personData) {
+						// Unsaved changes
+						//console.log("Unsaved changes")
+						
+					}
+
+					//_updateOverview(personData)
+
+					state.viewOverview();
+				}
+			},
+			viewOverview: () => {
+				state._updateState(VIEWS.OVERVIEW, "");
+				$('#overviewNav').toggleClass('active',true);
+				$('#settingsNav').toggleClass('active',false);
+				$("#overviewContainer").show();
+				$("#settingsContainer").hide();
+				_displayOverview(getPersonData)
+			},
+			viewSettings: () => {
+				state._updateState(VIEWS.SETTINGS, "");
+				$('#overviewNav').toggleClass('active',false);
+				$('#settingsNav').toggleClass('active',true);
+				$("#settingsContainer").show();
+				$("#overviewContainer").hide();
+
+				_displaySettings()
+			},
+			_updateState: (view, data) => {
+				state._view = view
+				state._data = data
+				localStorage.setItem("ol-state", state._view)
+				localStorage.setItem("ol-stateData", state._data)
+			},
+			// Load save state and show according to this
+			isStateSaved: () => {
+				return localStorage.getItem("ol-state") != null
+			},
+			loadAndShowState: () => {
+				if(state.isStateSaved()) {
+					state._view = safe(localStorage.getItem("ol-state"))
+					state._data = safe(localStorage.getItem("ol-stateData"))
+					if(state._view == VIEWS.OVERVIEW) {
+						state.viewOverview()
+					} else if (state._view == VIEWS.SETTINGS) {
+						state.viewSettings()
+					} else {
+						console.log("Unsupported view")
+					}
+				} else {
+					state._view = VIEWS.OVERVIEW
+					state._data = ""
+					state.viewOverview()
+				}
+			}
+		}
+
+		function autoGrow (oField) {
+			if (oField.scrollHeight > oField.clientHeight) {
+				oField.style.height = oField.scrollHeight + "px";
+			}
+		}
+
+		$( document ).ready(function() {
+			console.log("ready!");
+
+			state.loadAndShowState()
+
+		});
+	</script>
+</body>
+</html>
