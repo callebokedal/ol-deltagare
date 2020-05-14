@@ -337,7 +337,7 @@ Noah Hedenblom;Svart 5,0 km
 					//let str = $(el).parent().find("td.name")[0].innerHTML.slice(0, indexOfFirst)
 					//here += elName.innerHTML.slice(0, indexOfFirst) + "\n"
 
-					here += $(el).parent().find("td.name span").text()
+					here += $(el).parent().find("td.name span").text() + "\n"
 					counter++;
 					//console.log("adding " + elName.innerHTML.slice(0, indexOfFirst) + "\n")
 				} 
@@ -386,19 +386,15 @@ Noah Hedenblom;Svart 5,0 km
 		}
 
 		let updatePersonStats = () => {
+			state.saveData()
 			let html = "Kvar ute i skogen: " + $("#personList tr td[data-run-status='out']").length + "<br>"
 			html += "Närvarande: " + $("#personList tr td[data-here-status='here']").length + " (" + $("#personList tr td[data-here-status='unknown']").length + ' oklara)<br>'
 			html += "Ej närvarande: " + $("#personList tr td[data-here-status='nothere']").length 
 			document.getElementById("personStats").innerHTML = html
 		}
 
-		// Display people and their status
-		let _displayOverview = (data) => {
-			
-			$("#overviewTable").toggleClass("table-sm", document.getElementById("settingsLargeTable").checked)
 
-			// Merge current overview <-> person list
-			// Create model
+		let getCurrentData = () => {
 			let currentPersons = []
 			let currentPersonList = document.querySelectorAll("#personList tr")
 			currentPersonList.forEach((row) => {
@@ -409,8 +405,19 @@ Noah Hedenblom;Svart 5,0 km
 				person.run = $(row).children("td.run")[0].getAttribute("data-run-status")
 				currentPersons.push(person)
 			}); 
-			console.log("currentPersons:")
-			console.log(currentPersons)
+			return currentPersons
+		}
+
+		// Display people and their status
+		let _displayOverview = (data) => {
+			
+			$("#overviewTable").toggleClass("table-sm", document.getElementById("settingsLargeTable").checked)
+
+			// Merge current overview <-> person list
+			// Create model
+			let currentPersons = getCurrentData()
+			//console.log("currentPersons:")
+			//console.log(currentPersons)
 
 			// Data list
 			/*let dataPersonLines = getPersonData().split("\n").sort();
@@ -499,6 +506,11 @@ Noah Hedenblom;Svart 5,0 km
 			return document.getElementById("personData").value
 		}
 
+		let getCurrentDataForStorage = () => {
+			let data = getCurrentData()
+			return safeEncode(data)
+		}
+
 		// State controller
 		let state = {
 			_view: VIEWS.OVERVIEW,
@@ -529,15 +541,15 @@ Noah Hedenblom;Svart 5,0 km
 				}
 			},
 			viewOverview: () => {
-				state._updateState(VIEWS.OVERVIEW, "");
+				state._updateState(VIEWS.OVERVIEW, getCurrentDataForStorage());
 				$('#overviewNav').toggleClass('active',true);
 				$('#settingsNav').toggleClass('active',false);
 				$("#overviewContainer").show();
 				$("#settingsContainer").hide();
-				_displayOverview(getPersonData)
+				_displayOverview()
 			},
 			viewSettings: () => {
-				state._updateState(VIEWS.SETTINGS, "");
+				state._updateState(VIEWS.SETTINGS, getCurrentDataForStorage());
 				$('#overviewNav').toggleClass('active',false);
 				$('#settingsNav').toggleClass('active',true);
 				$("#settingsContainer").show();
@@ -555,14 +567,21 @@ Noah Hedenblom;Svart 5,0 km
 			isStateSaved: () => {
 				return localStorage.getItem("ol-state") != null
 			},
+			saveData: () => {
+				let encoded = getCurrentDataForStorage()
+				localStorage.setItem("ol-stateData", encoded)
+			},
+			//_loadData: () => {
+			//	let decoded = safeDecode(localStorage.getItem("ol-stateData"))
+			//},
 			loadAndShowState: () => {
 				if(state.isStateSaved()) {
 					state._view = safe(localStorage.getItem("ol-state"))
-					state._data = safe(localStorage.getItem("ol-stateData"))
+					state._data = safeDecode(localStorage.getItem("ol-stateData"))
 					if(state._view == VIEWS.OVERVIEW) {
-						state.viewOverview()
+						state.viewOverview(state._data)
 					} else if (state._view == VIEWS.SETTINGS) {
-						state.viewSettings()
+						state.viewSettings(state._data)
 					} else {
 						console.log("Unsupported view")
 					}
