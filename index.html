@@ -349,6 +349,8 @@ Noah Hedenblom;Svart 5,0 km
 			ed.value = here;
 			ed.select();
     		document.execCommand('copy');
+    		clearSelection()
+
 			$(ed).toggleClass("invisible", true);
 
     		//document.getElementById("exportMessage")
@@ -372,6 +374,15 @@ Noah Hedenblom;Svart 5,0 km
 			/* Copy the text inside the text field */
 			//document.execCommand("copy");
 			//alert("Data kopierad")
+		}
+		let clearSelection = () => {
+			if (document.selection) {
+				document.selection.empty();
+			}
+			else if (window.getSelection) {
+				window.getSelection().removeAllRanges();
+			}
+			
 		}
 
 		let updatePersonStats = () => {
