@@ -66,6 +66,7 @@
 		<tbody id="personList">
 		</tbody>
 		</table>
+		<div id="personStats" class="ml-4"></div>
 
 		<div class="row d-flex flex-row-reverse align-items-center p-2">
 			<button type="button" class="btn btn-primary mr-4" id="export" onclick="exportData();">Exportera</button>
@@ -314,6 +315,7 @@ Noah Hedenblom;Svart 5,0 km
 				$(el).parent().toggleClass("home", false)
 				el.innerHTML = getRunStatusIcon("unknown")
 			}
+			updatePersonStats()
 		}
 
 		let exportData = () => {
@@ -365,6 +367,13 @@ Noah Hedenblom;Svart 5,0 km
 			/* Copy the text inside the text field */
 			//document.execCommand("copy");
 			//alert("Data kopierad")
+		}
+
+		let updatePersonStats = () => {
+			let html = "Kvar ute i skogen: " + $("#personList tr td[data-run-status='out']").length + "<br>"
+			html += "Närvarande: " + $("#personList tr td[data-here-status='here']").length + " (" + $("#personList tr td[data-here-status='unknown']").length + ' oklara)<br>'
+			html += "Ej närvarande: " + $("#personList tr td[data-here-status='nothere']").length 
+			document.getElementById("personStats").innerHTML = html
 		}
 
 		// Display people and their status
@@ -431,6 +440,8 @@ Noah Hedenblom;Svart 5,0 km
 
 			// Redraw
 			document.getElementById("personList").innerHTML = html
+
+			updatePersonStats()
 		}
 		let _displaySettings = () => {
 			//console.log("_displaySettings")
