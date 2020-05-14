@@ -413,11 +413,14 @@ Noah Hedenblom;Svart 5,0 km
 			
 			$("#overviewTable").toggleClass("table-sm", document.getElementById("settingsLargeTable").checked)
 
+
+
 			// Merge current overview <-> person list
 			// Create model
 			let currentPersons = getCurrentData()
 			//console.log("currentPersons:")
 			//console.log(currentPersons)
+
 
 			// Data list
 			/*let dataPersonLines = getPersonData().split("\n").sort();
@@ -431,6 +434,17 @@ Noah Hedenblom;Svart 5,0 km
 			let html = ""
 			let personLines = getPersonData().split("\n").sort();
 			let showClasses = document.getElementById("settingsDetails").checked
+
+			console.log("data")
+			console.log(data)
+			if(data) {
+				currentPersons = data	
+				currentPersons.forEach((el) => {
+					//console.log(el.name + "fooo")
+					personLines += el.name + ";" + el.class + "\n"
+				})
+			}
+
 			///console.log('personLines:' + (personLines==""))
 			if(personLines!="") { // personLines.length > 0
 				$("#startInfo").toggleClass("d-none", true)
@@ -508,7 +522,7 @@ Noah Hedenblom;Svart 5,0 km
 
 		let getCurrentDataForStorage = () => {
 			let data = getCurrentData()
-			return safeEncode(data)
+			return JSON.stringify(data)
 		}
 
 		// State controller
@@ -540,13 +554,13 @@ Noah Hedenblom;Svart 5,0 km
 					state.viewOverview();
 				}
 			},
-			viewOverview: () => {
+			viewOverview: (data) => {
 				state._updateState(VIEWS.OVERVIEW, getCurrentDataForStorage());
 				$('#overviewNav').toggleClass('active',true);
 				$('#settingsNav').toggleClass('active',false);
 				$("#overviewContainer").show();
 				$("#settingsContainer").hide();
-				_displayOverview()
+				_displayOverview(data)
 			},
 			viewSettings: () => {
 				state._updateState(VIEWS.SETTINGS, getCurrentDataForStorage());
@@ -577,11 +591,11 @@ Noah Hedenblom;Svart 5,0 km
 			loadAndShowState: () => {
 				if(state.isStateSaved()) {
 					state._view = safe(localStorage.getItem("ol-state"))
-					state._data = safeDecode(localStorage.getItem("ol-stateData"))
+					state._data = JSON.parse( localStorage.getItem("ol-stateData") )
 					if(state._view == VIEWS.OVERVIEW) {
 						state.viewOverview(state._data)
 					} else if (state._view == VIEWS.SETTINGS) {
-						state.viewSettings(state._data)
+						state.viewSettings()
 					} else {
 						console.log("Unsupported view")
 					}
