@@ -66,6 +66,7 @@
 		<tbody id="personList">
 		</tbody>
 		</table>
+		<div id="startInfo" class="ml-4 d-none">Lägg till personer under <a href="#" onclick="toggleView('settings');return false;">Inställningar</a> i menyn.</div>
 		<div id="personStats" class="ml-4"></div>
 
 		<div class="row d-flex flex-row-reverse align-items-center p-2">
@@ -239,6 +240,7 @@ Noah Hedenblom;Svart 5,0 km
 					return [line, ""]
 				}
 			}
+			return []
 		}
 
 		let isPersonHere = (el) => { return el.getAttribute("data-here-status") == "here" }
@@ -408,35 +410,43 @@ Noah Hedenblom;Svart 5,0 km
 			let html = ""
 			let personLines = getPersonData().split("\n").sort();
 			let showClasses = document.getElementById("settingsDetails").checked
-			personLines.forEach((line, idx) => {
-				let data = parseLine(line)
+			///console.log('personLines:' + (personLines==""))
+			if(personLines!="") { // personLines.length > 0
+				$("#startInfo").toggleClass("d-none", true)
+				$("#personStats").toggleClass("d-none", false)
+				personLines.forEach((line, idx) => {
+					let data = parseLine(line)
 
-				let name = data[0]
-				let className = data[1] ? data[1] : ""
-				let status = "unknown"
-				let run = "unknown"
+					let name = data[0]
+					let className = data[1] ? data[1] : ""
+					let status = "unknown"
+					let run = "unknown"
 
-				const found = currentPersons.find(element => element.name == name);
-				if(found) {
-					status = found.status
-					run = found.run
-				}
+					const found = currentPersons.find(element => element.name == name);
+					if(found) {
+						status = found.status
+						run = found.run
+					}
 
-				if(data) {
-					html += '<tr class="runner">\
-						<td class="name"><span>' + name + '</span>' + (showClasses ? '<small class="text-muted d-block-lg ml-1">' + className +	'</small>': '') + '</td>\
-						<td class="status text-center" style="cursor: pointer;" data-here-status="' + status + '" onclick="changePersonStatus(this)">' + getPersonStatusIcon(status) + '</td>\
-						<td class="run text-center" style="cursor: pointer;" data-run-status="' + run + '" onclick="changeRunStatus(this)">' + getRunStatusIcon(run) + '</td>\
-					</tr>'
-				}
-				/*if(data) {
-					html += '<tr class="runner">\
-						<td class="name"><span>' + data[0] + '</span> ' + (document.getElementById("settingsDetails").checked ? '<small class="text-muted d-block-lg ml-1">' + data[1] +	'</small>': '') + '</td>\
-						<td class="status text-center" style="cursor: pointer;" data-here-status="unknown" onclick="changePersonStatus(this)">' + personUnknownIcon + '</td>\
-						<td class="run text-center" style="cursor: pointer;" data-run-status="unknown" onclick="changeRunStatus(this)">' + personUnknownIcon + '</td>\
-					</tr>'	
-				}*/
-			})
+					if(data) {
+						html += '<tr class="runner">\
+							<td class="name"><span>' + name + '</span>' + (showClasses ? '<small class="text-muted d-block-lg ml-1">' + className +	'</small>': '') + '</td>\
+							<td class="status text-center" style="cursor: pointer;" data-here-status="' + status + '" onclick="changePersonStatus(this)">' + getPersonStatusIcon(status) + '</td>\
+							<td class="run text-center" style="cursor: pointer;" data-run-status="' + run + '" onclick="changeRunStatus(this)">' + getRunStatusIcon(run) + '</td>\
+						</tr>'
+					}
+					/*if(data) {
+						html += '<tr class="runner">\
+							<td class="name"><span>' + data[0] + '</span> ' + (document.getElementById("settingsDetails").checked ? '<small class="text-muted d-block-lg ml-1">' + data[1] +	'</small>': '') + '</td>\
+							<td class="status text-center" style="cursor: pointer;" data-here-status="unknown" onclick="changePersonStatus(this)">' + personUnknownIcon + '</td>\
+							<td class="run text-center" style="cursor: pointer;" data-run-status="unknown" onclick="changeRunStatus(this)">' + personUnknownIcon + '</td>\
+						</tr>'	
+					}*/
+				})	
+			} else {
+				$("#startInfo").toggleClass("d-none", false)
+				$("#personStats").toggleClass("d-none", true)
+			}
 
 			// Redraw
 			document.getElementById("personList").innerHTML = html
