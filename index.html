@@ -73,7 +73,9 @@
 			<button type="button" class="btn btn-primary mr-4" id="export" onclick="exportData();">Exportera</button>
 			<small id="exportMessage" class="text-muted invisible mr-2">Närvarande personer har kopierats till urklipp - så du kan nu klistra in det i ett meddelande, mejl etc.</small>
 		</div>
-		<textarea class="invisible" id="exportData" class="text-muted"></textarea>
+		<div class="row">
+			<textarea class="invisible text-muted ml-4 mr-4 mb-8 w-100" id="exportData"></textarea>
+		</div>
 
 	</div>
 
@@ -347,17 +349,24 @@ Noah Hedenblom;Svart 5,0 km
 			let ed = document.getElementById("exportData")
 			$(ed).toggleClass("invisible", false);
 			ed.value = here;
+			autoGrow(ed);
 			ed.select();
     		document.execCommand('copy');
     		clearSelection()
 
-			$(ed).toggleClass("invisible", true);
+			//$(ed).toggleClass("invisible", true);
 
     		//document.getElementById("exportMessage")
     		$("#exportMessage").toggleClass("invisible", false);
     		setTimeout(function() { 
     			$("#exportMessage").toggleClass("invisible", true);
     		}, 5000);
+
+
+    		setTimeout(function() { 
+    			$(ed).toggleClass("invisible", true);
+    		}, 10000);
+    		
 
 // Bookmarklet
 //		document.getElementById("page-data").onclick = function() {
@@ -446,7 +455,7 @@ Noah Hedenblom;Svart 5,0 km
 			}
 
 			///console.log('personLines:' + (personLines==""))
-			if(personLines!="") { // personLines.length > 0
+			if(personLines != "") { // personLines.length > 0
 				$("#startInfo").toggleClass("d-none", true)
 				$("#personStats").toggleClass("d-none", false)
 				personLines.forEach((line, idx) => {
@@ -601,7 +610,7 @@ Noah Hedenblom;Svart 5,0 km
 					}
 				} else {
 					state._view = VIEWS.OVERVIEW
-					state._data = ""
+					//state._data = ""
 					state.viewOverview()
 				}
 			}
