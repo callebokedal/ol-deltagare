@@ -73,7 +73,7 @@
 			<button type="button" class="btn btn-primary mr-4" id="export" onclick="exportData();">Exportera</button>
 			<small id="exportMessage" class="text-muted invisible mr-2">Närvarande personer har kopierats till urklipp - så du kan nu klistra in det i ett meddelande, mejl etc.</small>
 		</div>
-		<textarea class="invisible" id="exportData"></textarea>
+		<textarea class="invisible" id="exportData" class="text-muted"></textarea>
 
 	</div>
 
@@ -617,6 +617,10 @@ Noah Hedenblom;Svart 5,0 km
 			console.log("ready!");
 
 			state.loadAndShowState()
+
+			window.onbeforeunload = function() {
+				return "Om du laddar om kommer inmatad data försvinna!";
+			}
 
 		});
 	</script>
