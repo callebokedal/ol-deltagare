@@ -286,6 +286,7 @@ Noah Hedenblom;Svart 5,0 km
 			} else {
 				setPersonUnknown(el)
 			}
+			updatePersonStats()
 		}
 		let getRunStatusIcon = (status) => {
 			if(status == "out") {
@@ -331,10 +332,12 @@ Noah Hedenblom;Svart 5,0 km
 					//var regex = /(<([^>]+)>)/ig;
 					//,   body = "<p>test</p>"
 					//,   result = body.replace(regex, "");
-					let elName = $(el).parent().find("td.name")[0]
-					const indexOfFirst = elName.innerHTML.indexOf("<");
+					//let elName = $(el).parent().find("td.name")[0]
+					//const indexOfFirst = elName.innerHTML.indexOf("<");
 					//let str = $(el).parent().find("td.name")[0].innerHTML.slice(0, indexOfFirst)
-					here += elName.innerHTML.slice(0, indexOfFirst) + "\n"
+					//here += elName.innerHTML.slice(0, indexOfFirst) + "\n"
+
+					here += $(el).parent().find("td.name span").text()
 					counter++;
 					//console.log("adding " + elName.innerHTML.slice(0, indexOfFirst) + "\n")
 				} 
