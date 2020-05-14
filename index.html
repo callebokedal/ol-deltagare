@@ -447,12 +447,15 @@ Noah Hedenblom;Svart 5,0 km
 			console.log("data")
 			console.log(data)
 			if(data) {
-				currentPersons = data	
+				currentPersons = data
+				personLines = []
 				currentPersons.forEach((el) => {
 					//console.log(el.name + "fooo")
-					personLines += el.name + ";" + el.class + "\n"
+					personLines.push(el.name + ";" + el.class)
 				})
 			}
+
+			//console.log(personLines.length)
 
 			///console.log('personLines:' + (personLines==""))
 			if(personLines != "") { // personLines.length > 0
