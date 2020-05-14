@@ -67,6 +67,12 @@
 		</tbody>
 		</table>
 
+		<div class="row d-flex flex-row-reverse align-items-center p-2">
+			<button type="button" class="btn btn-primary mr-4" id="export" onclick="exportData();">Exportera</button>
+			<small id="exportMessage" class="text-muted invisible mr-2">Närvarande personer har kopierats till urklipp - så du kan nu klistra in det i ett meddelande, mejl etc.</small>
+		</div>
+		<textarea class="invisible" id="exportData"></textarea>
+
 	</div>
 
 	<div id="settingsContainer" class="p-2">
@@ -101,12 +107,6 @@
 			<input type="checkbox" class="custom-control-input" id="settingsLargeTable">
 			<label class="custom-control-label" for="settingsLargeTable">Visa liten tabell</label>
 		</div>
-
-		<div class="row d-flex flex-row-reverse align-items-center p-2">
-			<button type="button" class="btn btn-primary mr-2" id="export" onclick="exportData();">Exportera</button>
-			<small id="exportMessage" class="text-muted invisible mr-2">Närvarande personer har kopierats till urklipp - så du kan nu klistra in det i ett meddelande, mejl etc.</small>
-		</div>
-		<textarea class="invisible" id="exportData"></textarea>
 
 		<!--<textarea id="debugPersonData" class="form-control mt-5" readonly></textarea>-->
 
@@ -245,23 +245,33 @@ Noah Hedenblom;Svart 5,0 km
 		let isPersonUnknown = (el) => { return el.getAttribute("data-here-status") == "unknown" }
 		let setPersonHere = (el) => {
 			el.setAttribute("data-here-status", "here")
-			el.innerHTML = personHereIcon
+			el.innerHTML = getPersonStatusIcon("here")
 		}
 		let setPersonNotHere = (el) => {
 			el.setAttribute("data-here-status", "nothere")
 			$(el).parent().toggleClass("nothere", true)
 			$(el).parent().find("td small").toggleClass("d-none", true)
 			$(el).parent().find("td.run").toggleClass("disabled", true)
-			el.innerHTML = personNotHereIcon
+			el.innerHTML = getPersonStatusIcon("nothere")
 		}
 		let setPersonUnknown = (el) => {
 			el.setAttribute("data-here-status", "unknown")
 			$(el).parent().toggleClass("nothere", false)
 			$(el).parent().find("td small").toggleClass("d-none", false)
 			$(el).parent().find("td.run").toggleClass("disabled", false)
-			el.innerHTML = personUnknownIcon
+			el.innerHTML = getPersonStatusIcon("unknown")
 		}
 
+
+		let getPersonStatusIcon = (status) => {
+			if(status == "here") {
+				return personHereIcon
+			} else if(status == "nothere") {
+				return personNotHereIcon
+			} else {
+				return personUnknownIcon
+			}
+		}
 		let changePersonStatus = (el) => {
 			//console.log(el)
 			let status = el.getAttribute("data-here-status")
@@ -274,13 +284,22 @@ Noah Hedenblom;Svart 5,0 km
 				setPersonUnknown(el)
 			}
 		}
+		let getRunStatusIcon = (status) => {
+			if(status == "out") {
+				return personRunningIcon
+			} else if(status == "home") {
+				return returnIcon
+			} else {
+				return personUnknownIcon
+			}
+		}
 		let changeRunStatus = (el) => {
 			let status = el.getAttribute("data-run-status")
 			//console.log("Running: " + status)
 			if(status == "unknown") {
 				el.setAttribute("data-run-status", "out")
 				$(el).parent().toggleClass("out", true)
-				el.innerHTML = personRunningIcon
+				el.innerHTML = getRunStatusIcon("out")
 				let statusEl = $(el).parent().find("td.status")[0]
 				if(isPersonUnknown(statusEl)) {
 					setPersonHere(statusEl)
@@ -289,11 +308,11 @@ Noah Hedenblom;Svart 5,0 km
 				el.setAttribute("data-run-status", "home")
 				$(el).parent().toggleClass("out", false)
 				$(el).parent().toggleClass("home", true)
-				el.innerHTML = returnIcon
+				el.innerHTML = getRunStatusIcon("home") 
 			} else {
 				el.setAttribute("data-run-status", "unknown")
 				$(el).parent().toggleClass("home", false)
-				el.innerHTML = personUnknownIcon
+				el.innerHTML = getRunStatusIcon("unknown")
 			}
 		}
 
@@ -301,6 +320,7 @@ Noah Hedenblom;Svart 5,0 km
 			let personList = document.querySelectorAll("#personList tr td.status")
 
 			let here = ""
+			let counter = 0
 			personList.forEach((el) => {
 				if(isPersonHere(el)) {
 
@@ -311,13 +331,11 @@ Noah Hedenblom;Svart 5,0 km
 					const indexOfFirst = elName.innerHTML.indexOf("<");
 					//let str = $(el).parent().find("td.name")[0].innerHTML.slice(0, indexOfFirst)
 					here += elName.innerHTML.slice(0, indexOfFirst) + "\n"
-					console.log("adding " + elName.innerHTML.slice(0, indexOfFirst) + "\n")
-				} else {
-					//console.log(el.innerHTML)
-				}
+					counter++;
+					//console.log("adding " + elName.innerHTML.slice(0, indexOfFirst) + "\n")
+				} 
 			});
-
-			
+			here = counter + " st personer var närvarande\n" + here
 
 			let ed = document.getElementById("exportData")
 			$(ed).toggleClass("invisible", false);
@@ -330,7 +348,7 @@ Noah Hedenblom;Svart 5,0 km
     		$("#exportMessage").toggleClass("invisible", false);
     		setTimeout(function() { 
     			$("#exportMessage").toggleClass("invisible", true);
-    		}, 3000);
+    		}, 5000);
 
 // Bookmarklet
 //		document.getElementById("page-data").onclick = function() {
@@ -351,25 +369,67 @@ Noah Hedenblom;Svart 5,0 km
 
 		// Display people and their status
 		let _displayOverview = (data) => {
-			//console.log("_displayOverview")
-
-			//console.log(document.getElementById("settingsDetails").checked)
 			
 			$("#overviewTable").toggleClass("table-sm", document.getElementById("settingsLargeTable").checked)
 
+			// Merge current overview <-> person list
+			// Create model
+			let currentPersons = []
+			let currentPersonList = document.querySelectorAll("#personList tr")
+			currentPersonList.forEach((row) => {
+				let person = {}
+				person.name =  safe($(row).children("td.name").children("span").text())
+				person.class =  $(row).children("td.name").children("small").length ? $(row).children("td.name").children("small").text() : ""
+				person.status = $(row).children("td.status")[0].getAttribute("data-here-status")
+				person.run = $(row).children("td.run")[0].getAttribute("data-run-status")
+				currentPersons.push(person)
+			}); 
+			console.log("currentPersons:")
+			console.log(currentPersons)
+
+			// Data list
+			/*let dataPersonLines = getPersonData().split("\n").sort();
+			dataPersonLines.forEach((line, idx) => {
+				let data = parseLine(line)
+
+			});*/
+
+
+			// Merge
 			let html = ""
 			let personLines = getPersonData().split("\n").sort();
+			let showClasses = document.getElementById("settingsDetails").checked
 			personLines.forEach((line, idx) => {
 				let data = parseLine(line)
-				//console.log(data)
+
+				let name = data[0]
+				let className = data[1] ? data[1] : ""
+				let status = "unknown"
+				let run = "unknown"
+
+				const found = currentPersons.find(element => element.name == name);
+				if(found) {
+					status = found.status
+					run = found.run
+				}
+
 				if(data) {
 					html += '<tr class="runner">\
-						<td class="name">' + data[0] + (document.getElementById("settingsDetails").checked ? '<small class="text-muted d-block-lg ml-1">' + data[1] +	'</small>': '') + '</td>\
+						<td class="name"><span>' + name + '</span>' + (showClasses ? '<small class="text-muted d-block-lg ml-1">' + className +	'</small>': '') + '</td>\
+						<td class="status text-center" style="cursor: pointer;" data-here-status="' + status + '" onclick="changePersonStatus(this)">' + getPersonStatusIcon(status) + '</td>\
+						<td class="run text-center" style="cursor: pointer;" data-run-status="' + run + '" onclick="changeRunStatus(this)">' + getRunStatusIcon(run) + '</td>\
+					</tr>'
+				}
+				/*if(data) {
+					html += '<tr class="runner">\
+						<td class="name"><span>' + data[0] + '</span> ' + (document.getElementById("settingsDetails").checked ? '<small class="text-muted d-block-lg ml-1">' + data[1] +	'</small>': '') + '</td>\
 						<td class="status text-center" style="cursor: pointer;" data-here-status="unknown" onclick="changePersonStatus(this)">' + personUnknownIcon + '</td>\
 						<td class="run text-center" style="cursor: pointer;" data-run-status="unknown" onclick="changeRunStatus(this)">' + personUnknownIcon + '</td>\
 					</tr>'	
-				}
+				}*/
 			})
+
+			// Redraw
 			document.getElementById("personList").innerHTML = html
 		}
 		let _displaySettings = () => {
@@ -424,6 +484,7 @@ Noah Hedenblom;Svart 5,0 km
 					if(personDataCached != personData) {
 						// Unsaved changes
 						//console.log("Unsaved changes")
+						//alert("new updates")
 						
 					}
 
