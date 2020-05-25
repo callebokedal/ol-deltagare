@@ -60,7 +60,7 @@
 			<tr>
 				<th scope="col">Namn</th>
 				<th class="text-center">Här</th>
-				<th class="text-center">Ut/In</th>
+				<th class="text-center">Ute/Mål</th>
 			</tr>
 		</thead>
 		<tbody id="personList">
@@ -169,6 +169,10 @@
 		const personNotHereIcon = '<svg class="bi bi-person-dash-fill text-danger" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
 				<path fill-rule="evenodd" d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zm5-6a3 3 0 100-6 3 3 0 000 6zm5-.5a.5.5 0 01.5-.5h4a.5.5 0 010 1h-4a.5.5 0 01-.5-.5z" clip-rule="evenodd"/>\
 			</svg>'
+		const exportIcon = '<svg class="bi bi-clipboard mr-2" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
+			  <path fill-rule="evenodd" d="M4 1.5H3a2 2 0 00-2 2V14a2 2 0 002 2h10a2 2 0 002-2V3.5a2 2 0 00-2-2h-1v1h1a1 1 0 011 1V14a1 1 0 01-1 1H3a1 1 0 01-1-1V3.5a1 1 0 011-1h1v-1z" clip-rule="evenodd"/>\
+			  <path fill-rule="evenodd" d="M9.5 1h-3a.5.5 0 00-.5.5v1a.5.5 0 00.5.5h3a.5.5 0 00.5-.5v-1a.5.5 0 00-.5-.5zm-3-1A1.5 1.5 0 005 1.5v1A1.5 1.5 0 006.5 4h3A1.5 1.5 0 0011 2.5v-1A1.5 1.5 0 009.5 0h-3z" clip-rule="evenodd"/>\
+			</svg>'
 
 		// Eventor selector
 		// document.querySelectorAll("#main h3 ~ table tbody tr:nth-child(1n+1) td:nth-child(-n+2)")
@@ -182,56 +186,6 @@
 			}
 			console.log(result)
 		}
-
-/*
-Per Söderberg;Gul 2,3 km
-Hugo Alm;Orange 3,7 km
-Einar Beckman;Orange 3,7 km
-Anders Björklund;Orange 3,7 km
-Noah Björklund;Orange 3,7 km
-Helena Björkman;Orange 3,7 km
-Anton Edvardsson;Orange 3,7 km
-Annika Göök;Orange 3,7 km
-Hannes Göök;Orange 3,7 km
-Emelina Holmqvist;Orange 3,7 km
-Malin Lemurell;Orange 3,7 km
-Helena Lundqvist;Orange 3,7 km
-Katarina Nilsson;Orange 3,7 km
-Eric Olofsson;Orange 3,7 km
-Julia Svarfvar;Orange 3,7 km
-Klara Wedberg-Kilnäs;Orange 3,7 km
-Fabian Alinder;Svart 5,0 km
-Ingrid Alinder;Svart 5,0 km
-Linus Alinder;Svart 5,0 km
-Magnus Alinder;Svart 5,0 km
-Axel Björkman;Svart 5,0 km
-Claes Björkman;Svart 5,0 km
-Hannes Essunger;Svart 5,0 km
-Adam Granhage;Svart 5,0 km
-Ola Göök;Svart 5,0 km
-Magnus Hammarqvist;Svart 5,0 km
-Johan Hjelmér;Svart 5,0 km
-Ebbe Holmqvist;Svart 5,0 km
-Maria Holmqvist;Svart 5,0 km
-Wilmer Holmqvist;Svart 5,0 km
-Isak Lemurell;Svart 5,0 km
-Stefan Lemurell;Svart 5,0 km
-Maria Logren;Svart 5,0 km
-Mats Logren;Svart 5,0 km
-Jonas Lundqvist;Svart 5,0 km
-Signe Lundqvist;Svart 5,0 km
-Emilia Lundstedt;Svart 5,0 km
-Olivia Lundstedt;Svart 5,0 km
-Annika Oskarsson;Svart 5,0 km
-Linnea Oskarsson;Svart 5,0 km
-Lukas Randåker;Svart 5,0 km
-Simon Sahlin;Svart 5,0 km
-Oskar Svarfvar;Svart 5,0 km
-Hans Wedberg;Svart 5,0 km
-Linnea Wedberg-Kilnäs;Svart 5,0 km
-Tove Wedberg-Kilnäs;Svart 5,0 km
-Noah Hedenblom;Svart 5,0 km
-*/
 
 		let parseLine = (line) => {
 			if(line != "") {
@@ -330,18 +284,8 @@ Noah Hedenblom;Svart 5,0 km
 			let counter = 0
 			personList.forEach((el) => {
 				if(isPersonHere(el)) {
-
-					//var regex = /(<([^>]+)>)/ig;
-					//,   body = "<p>test</p>"
-					//,   result = body.replace(regex, "");
-					//let elName = $(el).parent().find("td.name")[0]
-					//const indexOfFirst = elName.innerHTML.indexOf("<");
-					//let str = $(el).parent().find("td.name")[0].innerHTML.slice(0, indexOfFirst)
-					//here += elName.innerHTML.slice(0, indexOfFirst) + "\n"
-
 					here += $(el).parent().find("td.name span").text() + "\n"
 					counter++;
-					//console.log("adding " + elName.innerHTML.slice(0, indexOfFirst) + "\n")
 				} 
 			});
 			here = counter + " st personer var närvarande\n" + here
@@ -349,41 +293,22 @@ Noah Hedenblom;Svart 5,0 km
 			let ed = document.getElementById("exportData")
 			$(ed).toggleClass("invisible", false);
 			ed.value = here;
-			autoGrow(ed);
+			//autoGrow(ed);
 			ed.select();
     		document.execCommand('copy');
     		clearSelection()
 
-			//$(ed).toggleClass("invisible", true);
-
-    		//document.getElementById("exportMessage")
     		$("#exportMessage").toggleClass("invisible", false);
     		setTimeout(function() { 
     			$("#exportMessage").toggleClass("invisible", true);
     		}, 5000);
 
-
     		setTimeout(function() { 
     			$(ed).toggleClass("invisible", true);
     		}, 10000);
-    		
 
-// Bookmarklet
-//		document.getElementById("page-data").onclick = function() {
-//			this.select();
-//			document.execCommand('copy');	
-//		} 
-
-			//let copyText = document.getElementById("exportData");
-
-			/* Select the text field */
-			//copyText.select();
-			//copyText.setSelectionRange(0, 99999); /*For mobile devices*/
-
-			/* Copy the text inside the text field */
-			//document.execCommand("copy");
-			//alert("Data kopierad")
 		}
+
 		let clearSelection = () => {
 			if (document.selection) {
 				document.selection.empty();
@@ -391,7 +316,6 @@ Noah Hedenblom;Svart 5,0 km
 			else if (window.getSelection) {
 				window.getSelection().removeAllRanges();
 			}
-			
 		}
 
 		let updatePersonStats = () => {
@@ -422,14 +346,11 @@ Noah Hedenblom;Svart 5,0 km
 			
 			$("#overviewTable").toggleClass("table-sm", document.getElementById("settingsLargeTable").checked)
 
-
-
 			// Merge current overview <-> person list
 			// Create model
 			let currentPersons = getCurrentData()
 			//console.log("currentPersons:")
 			//console.log(currentPersons)
-
 
 			// Data list
 			/*let dataPersonLines = getPersonData().split("\n").sort();
@@ -629,6 +550,8 @@ Noah Hedenblom;Svart 5,0 km
 			console.log("ready!");
 
 			state.loadAndShowState()
+
+			//document.getElementById("export").innerHTML = exportIcon + "Exportera"
 
 			//window.onbeforeunload = function() {
 			//	return "Om du laddar om kommer inmatad data försvinna!";
