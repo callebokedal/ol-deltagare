@@ -295,17 +295,17 @@
 			ed.value = here;
 			//autoGrow(ed);
 			ed.select();
-    		document.execCommand('copy');
-    		clearSelection()
+			document.execCommand('copy');
+			clearSelection()
 
-    		$("#exportMessage").toggleClass("invisible", false);
-    		setTimeout(function() { 
-    			$("#exportMessage").toggleClass("invisible", true);
-    		}, 5000);
+			$("#exportMessage").toggleClass("invisible", false);
+			setTimeout(function() { 
+				$("#exportMessage").toggleClass("invisible", true);
+			}, 5000);
 
-    		setTimeout(function() { 
-    			$(ed).toggleClass("invisible", true);
-    		}, 10000);
+			setTimeout(function() { 
+				$(ed).toggleClass("invisible", true);
+			}, 10000);
 
 		}
 
@@ -328,6 +328,7 @@
 
 
 		let getCurrentData = () => {
+			console.log("getCurrentData")
 			let currentPersons = []
 			let currentPersonList = document.querySelectorAll("#personList tr")
 			currentPersonList.forEach((row) => {
@@ -501,7 +502,6 @@
 				$('#settingsNav').toggleClass('active',true);
 				$("#settingsContainer").show();
 				$("#overviewContainer").hide();
-
 				_displaySettings()
 			},
 			_updateState: (view, data) => {
