@@ -37,17 +37,17 @@
 <body>
 
 	<nav class="navbar navbar-expand-sm navbar-dark" style="background-color: #3f9049;">
-		<a class="navbar-brand" href="#">SFK OL</a>
+		<a class="navbar-brand">SFK OL</a>
 		<button class="navbar-toggler text-white" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
 			<span class="navbar-toggler-icon text-white"></span>
 		</button>
 		<div class="collapse navbar-collapse" id="navbarNav">
 			<ul class="navbar-nav">
 				<li class="nav-item active" id="overviewNav">
-					<a class="nav-link" href="#" onclick="toggleView('overview');return false;">Närvaro</a>
+					<a class="nav-link" onclick="toggleView('overview');return false;">Närvaro</a>
 				</li>
 				<li class="nav-item" id="settingsNav">
-					<a class="nav-link" href="#" onclick="toggleView('settings');return false;">Inställningar</a>
+					<a class="nav-link" onclick="toggleView('settings');return false;">Inställningar</a>
 				</li>
 			</ul>
 		</div>
@@ -63,20 +63,39 @@
 				<th class="text-center">Ute/Mål</th>
 			</tr>
 		</thead>
-		<tbody id="personList">
-		</tbody>
+		<tbody id="personList"></tbody>
 		</table>
+
 		<div id="startInfo" class="ml-4 d-none">Lägg till personer under <a href="#" onclick="toggleView('settings');return false;">Inställningar</a> i menyn.</div>
 		<div id="personStats" class="ml-4"></div>
 
 		<div class="row d-flex flex-row-reverse align-items-center p-2">
-			<button type="button" class="btn btn-primary mr-4" id="export" onclick="exportData();">Exportera</button>
-			<small id="exportMessage" class="text-muted invisible mr-2">Närvarande personer har kopierats till urklipp - så du kan nu klistra in det i ett meddelande, mejl etc.</small>
+			<button type="button" class="btn btn-primary mr-4" id="share" onclick="shareData();">Dela...</button>
+			<button type="button" class="btn btn-primary mr-4" id="report" onclick="createReport();">Skapa rapport</button>
+			<small id="reportMessage" class="text-muted invisible mr-2">Närvarande personer har kopierats till urklipp - så du kan nu klistra in det i ett meddelande, mejl etc.</small>
 		</div>
 		<div class="row">
-			<textarea class="invisible text-muted ml-4 mr-4 mb-8 w-100" id="exportData"></textarea>
+			<textarea class="invisible text-muted ml-4 mr-4 mb-8 w-100" id="createReport"></textarea>
 		</div>
 
+	</div>
+
+	<div class="modal" tabindex="-1" id="shareModal">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Dela</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<p>Kopiera länken och dela (via SMS, Slack, e-post)</p>
+					<p id="shareLink"></p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="shareModal.hide();">Stäng</button>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<div id="settingsContainer" class="p-2">
@@ -120,8 +139,6 @@
 				<textarea id="personData" class="form-control" aria-label="Person" ></textarea>
 			</div>
 		</div>-->
-
-
 	</div>
 
 	<script src="lib/js/bootstrap.4.4.1.min.js"></script>
@@ -221,7 +238,6 @@
 			el.innerHTML = getPersonStatusIcon("unknown")
 		}
 
-
 		let getPersonStatusIcon = (status) => {
 			if(status == "here") {
 				return personHereIcon
@@ -277,7 +293,45 @@
 			updatePersonStats()
 		}
 
-		let exportData = () => {
+		let shareData = () => {
+
+			let data = {};
+			data.persons = [];
+
+			let personList = document.querySelectorAll("#personList tr.runner");
+			personList.forEach((el) => {
+				// Create small "objects"
+				// Format: '<person>|<class>|<here or not>|<out running or not>'
+				let person = "";
+				person = el.querySelector("td.name span").innerHTML.trim().replace(";","") + ";";
+				if(el.querySelector("td.name small")) {
+					//p.c = el.querySelector("td.name small").innerHTML.trim();
+					person += el.querySelector("td.name small").innerHTML.trim() + ";";
+				} else {
+					person += ";";
+				}
+				//p.s = el.querySelector("td.status").dataset['hereStatus'];
+				//p.r = el.querySelector("td.run").dataset['runStatus'];
+				person += el.querySelector("td.status").dataset['hereStatus'] + ";"; 
+				person += el.querySelector("td.run").dataset['runStatus'];
+				data.persons.push(person);
+			});
+			//console.log("Data to export: ", btoa(JSON.stringify(data)));
+			
+			var url = new URL(document.location);
+			//console.log(url.protocol + "//" + url.host + url.pathname);
+			let shareLink = url.protocol + "//" + url.host + url.pathname + "?data=" + btoa(JSON.stringify(data));
+			//console.log("Link to share, encoded: " + encodeURI(shareLink));
+
+			let a = document.createElement('a');
+			a.setAttribute('href', encodeURI(shareLink));
+			a.innerHTML = "Länk att dela (kopiera mig)";
+			document.getElementById("shareLink").innerHTML = "";
+			document.getElementById("shareLink").appendChild(a);
+			shareModal.show();
+		}
+
+		let createReport = () => {
 			let personList = document.querySelectorAll("#personList tr td.status")
 
 			let here = ""
@@ -290,7 +344,7 @@
 			});
 			here = counter + " st personer var närvarande\n" + here
 
-			let ed = document.getElementById("exportData")
+			let ed = document.getElementById("createReport")
 			$(ed).toggleClass("invisible", false);
 			ed.value = here;
 			//autoGrow(ed);
@@ -326,7 +380,6 @@
 			document.getElementById("personStats").innerHTML = html
 		}
 
-
 		let getCurrentData = () => {
 			console.log("getCurrentData")
 			let currentPersons = []
@@ -342,6 +395,49 @@
 			return currentPersons
 		}
 
+		// Import data from external part
+		let importData = () => {
+			let url = new URL(document.location);
+			let params = new URLSearchParams(url.search);
+
+			if (params.has("data")) {
+			
+				let dataStr = safeDecode(params.get("data"));
+				let data = JSON.parse(dataStr);
+				console.log("Imported data: ", data);
+
+				// Convert to workable object
+				let currentPersons = []
+				data.persons.forEach((str) => {
+					// Expected format: '<person>;<class>;<here or not>;<out running or not>'
+					let p = str.split(";");
+					let person = {}
+					person.name = p[0];
+					person.class = p[1];
+					person.status = p[2];
+					person.run = p[3];
+					currentPersons.push(person);
+				}); 
+				console.log("currentPersons: ", currentPersons);
+
+				// Init page
+				// TODO: Improve later
+				//state._updateState(VIEWS.OVERVIEW, currentPersons);
+				//let url = console.log(url.protocol + "//" + url.host + url.pathname)
+				//let newUrl = new URL(url.protocol + "//" + url.host + url.pathname);
+				//document.location = newUrl.href;
+
+				//$("#overviewTable").toggleClass("table-sm", document.getElementById("settingsLargeTable").checked)
+				_renderPersons(currentPersons, data.persons);
+
+				// Mark import done
+				document.location.hash="imported";
+				console.log("Import completed!");
+			} else {
+				console.info("No data to import");
+			}
+		}
+
 		// Display people and their status
 		let _displayOverview = (data) => {
 			
@@ -349,7 +445,7 @@
 
 			// Merge current overview <-> person list
 			// Create model
-			let currentPersons = getCurrentData()
+			let currentPersons = getCurrentData();
 			//console.log("currentPersons:")
 			//console.log(currentPersons)
 
@@ -360,41 +456,48 @@
 
 			});*/
 
-
 			// Merge
-			let html = ""
 			let personLines = getPersonData().split("\n").sort();
-			let showClasses = document.getElementById("settingsDetails").checked
 
-			console.log("data")
-			console.log(data)
+			console.log("_displayOverview - data: ", data);
 			if(data) {
-				currentPersons = data
-				personLines = []
+				currentPersons = data;
+				personLines = [];
 				currentPersons.forEach((el) => {
 					//console.log(el.name + "fooo")
-					personLines.push(el.name + ";" + el.class)
+					personLines.push(el.name + ";" + el.class);
 				})
 			}
+
+			_renderPersons(currentPersons, personLines);
+		}
+
+		let _renderPersons = (currentPersons, personLines) => {
+			
+			let html = ""
+			let showClasses = document.getElementById("settingsDetails").checked
 
 			//console.log(personLines.length)
 
 			///console.log('personLines:' + (personLines==""))
+			console.log("_renderPersons - _renderPersons: ", personLines);
 			if(personLines != "") { // personLines.length > 0
 				$("#startInfo").toggleClass("d-none", true)
 				$("#personStats").toggleClass("d-none", false)
 				personLines.forEach((line, idx) => {
 					let data = parseLine(line)
 
+					console.log("_renderPersons - data: ", data);
+
 					let name = data[0]
-					let className = data[1] ? data[1] : ""
-					let status = "unknown"
-					let run = "unknown"
+					let className = data[1] ? data[1] : "";
+					let status = data[2] ? data[2] : "unknown";
+					let run = data[3] ? data[3] : "unknown";
 
 					const found = currentPersons.find(element => element.name == name);
 					if(found) {
-						status = found.status
-						run = found.run
+						status = found.status;
+						run = found.run;
 					}
 
 					if(data) {
@@ -418,16 +521,23 @@
 			}
 
 			// Redraw
-			document.getElementById("personList").innerHTML = html
+			document.getElementById("personList").innerHTML = html;
+			console.log("Redraw", data);
 
-			updatePersonStats()
+			updatePersonStats();
 		}
+
 		let _displaySettings = () => {
 			//console.log("_displaySettings")
 		}
 
 		let toggleView = (view) => {
 			state.toggleView(view)
+		}
+
+		let getTimeStamp = () => {
+			var d = new Date()
+			return d.getFullYear() + d.getMonth().toString().padStart("2", "0") + d.getDate().toString().padStart("2", "0") + "_" + d.getHours().toString().padStart("2", "0") + d.getMinutes().toString().padStart("2", "0")
 		}
 
 		let safeEncode = (decoded) => {return window.btoa(safe(decoded))}
@@ -455,8 +565,8 @@
 		}
 
 		let getCurrentDataForStorage = () => {
-			let data = getCurrentData()
-			return JSON.stringify(data)
+			let data = getCurrentData();
+			return JSON.stringify(data);
 		}
 
 		// State controller
@@ -465,6 +575,9 @@
 			_data: "",
 			toggleView: (view) => {
 				if(view == "settings") {
+
+					//var c = getPersonDataCache();
+					//console.log("Got persons from cache: ", c);
 
 					// Save copy of persondata
 					setPersonDataAttr("data-person-list", personData.value)
@@ -480,11 +593,8 @@
 						// Unsaved changes
 						//console.log("Unsaved changes")
 						//alert("new updates")
-						
 					}
-
 					//_updateOverview(personData)
-
 					state.viewOverview();
 				}
 			},
@@ -522,6 +632,7 @@
 			//	let decoded = safeDecode(localStorage.getItem("ol-stateData"))
 			//},
 			loadAndShowState: () => {
+				// [{"name":"Eric","class":"","status":"unknown","run":"unknown"},{"name":"Olle","class":"","status":"unknown","run":"unknown"}]
 				if(state.isStateSaved()) {
 					state._view = safe(localStorage.getItem("ol-state"))
 					state._data = JSON.parse( localStorage.getItem("ol-stateData") )
@@ -546,10 +657,28 @@
 			}
 		}
 
+		let shareModal = new bootstrap.Modal(document.getElementById('shareModal'), {
+			keyboard: true,
+			focus: true
+		});
+
 		$( document ).ready(function() {
 			console.log("ready!");
 
-			state.loadAndShowState()
+			var params = new URLSearchParams(document.location.search);
+			if (params.has("data")) {
+				if (document.location.hash!="#imported") {
+					// Data to import
+					console.log("Try to import data")
+					importData();
+				} else {
+					console.log("Data already imported")
+				}
+			} else {
+				console.log("No data to import")
+			}
+
+			state.loadAndShowState();
 
 			//document.getElementById("export").innerHTML = exportIcon + "Exportera"
 
