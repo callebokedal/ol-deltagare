@@ -320,7 +320,7 @@
 			
 			var url = new URL(document.location);
 			//console.log(url.protocol + "//" + url.host + url.pathname);
-			let shareLink = url.protocol + "//" + url.host + url.pathname + "?data=" + btoa(JSON.stringify(data));
+			let shareLink = url.protocol + "//" + url.host + url.pathname + "?data=" + encodeURI(btoa(JSON.stringify(data)));
 			//console.log("Link to share, encoded: " + encodeURI(shareLink));
 
 			let a = document.createElement('a');
