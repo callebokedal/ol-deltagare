@@ -33,11 +33,11 @@
 	<script type="text/template" id="personsChecklistTemplate">
 		<% 
 		var persons = data.persons;
-		_.forEach(persons, function(person) { %>
-		<tr class="runner" data-here-status="<%= person.status ? person.status:'unknown' %>" data-run-status="<%= person.run ? person.run:'unknown' %>">
+		_.forEach(persons, function(person) { 
+		%><tr class="runner" data-here-status="<%= person.status ? person.status:'unknown' %>" data-run-status="<%= person.run ? person.run:'unknown' %>">
 			<td class="name"><span><%= person.name %></span><%= data.showClasses ? '<small class="text-muted d-block-lg ml-1">'+ person.class +'</small>': '' %></td>
 			<td class="status text-center" style="cursor: pointer;" onclick="changePersonStatus($(this).parent());"><%= getPersonStatusIcon(person.status) %></td>
-			<td class="run text-center" style="cursor: pointer;" onclick="changeRunStatus($(this).parent());"><%= getRunStatusIcon(person.run) %></td>
+			<td class="run text-center<%= person.status == "nothere" ? ' disabled':'' %>" style="cursor: pointer;" onclick="changeRunStatus($(this).parent());"><%= getRunStatusIcon(person.run) %></td>
 		</tr>
 		<% }); %>
 	</script>
