@@ -34,10 +34,10 @@
 		<% 
 		var persons = data.persons;
 		_.forEach(persons, function(person) { 
-		%><tr class="runner" data-here-status="<%= person.status ? person.status:'unknown' %>" data-run-status="<%= person.run ? person.run:'unknown' %>">
+		%><tr class="runner" data-hidden="<%= person.hidden %>" data-run-status="<%= person.run ? person.run:'unknown' %>">
 			<td class="name"><span><%= person.name %></span><%= data.showClasses ? '<small class="text-muted d-block-lg ml-1">'+ person.class +'</small>': '' %></td>
 			<td class="status text-center" style="cursor: pointer;" onclick="changePersonStatus($(this).parent());"><%= getPersonStatusIcon(person.status) %></td>
-			<td class="run text-center<%= person.status == "nothere" ? ' disabled':'' %>" style="cursor: pointer;" onclick="changeRunStatus($(this).parent());"><%= getRunStatusIcon(person.run) %></td>
+			<td class="run text-center<%= person.status == 'nothere' ? ' disabled':'' %>" style="cursor: pointer;" onclick="changeRunStatus($(this).parent());"><%= getRunStatusIcon(person.run) %></td>
 		</tr>
 		<% }); %>
 	</script>
@@ -56,18 +56,19 @@
 		</table>
 
 		<div id="startInfo" class="ml-4 d-none">Lägg till personer under <a href="#" onclick="showSettings();return false;">Inställningar</a> i menyn.</div>
-		<div id="personStats" class="ml-4"></div>
+		<div class="row ml-4" id="personStats"></div>
+		<div class="row p-4">
+			<p class="m-2">Till <a href="#" onclick="showSettings();return false;">Inställningar &raquo;</a></p>
+		</div>
 
 		<div class="row d-flex flex-row-reverse align-items-center p-2">
+			<!--<button type="button" class="btn btn-danger mr-4" id="share" onclick="hideCompleted();">Göm färdiga</button>-->
 			<button type="button" class="btn btn-primary mr-4" id="share" onclick="shareData();">Dela...</button>
-			<button type="button" class="btn btn-primary mr-4" id="report" onclick="createReport();">Skapa rapport</button>
+			<button type="button" class="btn btn-primary mr-4" id="report" onclick="createReport();">Rapport</button>
 			<small id="reportMessage" class="text-muted invisible mr-2">Närvarande personer har kopierats till urklipp - så du kan nu klistra in det i ett meddelande, mejl etc.</small>
 		</div>
 		<div class="row">
 			<textarea class="invisible text-muted ml-4 mr-4 mb-8 w-100" id="createReport"></textarea>
-		</div>
-		<div class="row p-4">
-			<p class="m-2">Till <a href="#" onclick="showSettings();return false;">Inställningar</a></p>
 		</div>
 
 	</div>
@@ -137,7 +138,7 @@
 		<h5 class="my-2">Personer att hantera</h5>
 		<div class="row pl-2">
 			<button type="button" class="btn btn-sm btn-primary m-2" id="addList" onclick="addListModal.show();">Lägg till...</button>
-			<p class="m-2">Till <a href="" onclick="showOverview();return false;">Närvaro</a></p>
+			<p class="m-2">Till <a href="" onclick="showOverview();return false;">Närvaro &raquo;</a></p>
 		</div>
 		<div class="row pl-2">
 			<p class="m-2" id="personsList">Inga personer inlagda</p>
@@ -146,7 +147,7 @@
 		<script type="text/template" id="personListTemplate">
 			<% _.forEach(persons, function(person) { %>
 			<div>
-				<div><%= person.name %> <span class="small"><%= person.class %></span> <a href="javascript:deletePerson('<%= person.name %>');">Ta bort<a></div>
+				<div><%= person.name %> <span class="small"><%= person.class %></span> <a class="text-danger" href="javascript:deletePerson('<%= person.name %>');">Ta bort<a></div>
 			</div>
 			<% }); %>
 		</script>
@@ -196,18 +197,21 @@
 			if (params.has("data")) {
 				if (document.location.hash!="#imported") {
 					// Data to import
-					console.log("Try to import data")
+					console.log("Try to import data");
 					importData();
 				} else {
-					console.log("Data already imported")
+					console.log("Data already imported");
+					var personsLoaded = getDataFromLocalStorage();
+					appdata.persons = personsLoaded;
 				}
 			} else {
-				console.log("No data to import")
+				var personsLoaded = getDataFromLocalStorage();
+				appdata.persons = personsLoaded;
+				console.log("No data to import");
 			}
 
+
 			var view = localStorage.getItem("ol-state");
-			var personsLoaded = getDataFromLocalStorage();
-			appdata.persons = personsLoaded;
 			if(view == VIEWS.SETTINGS) {
 				showSettings();
 			} else {
