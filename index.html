@@ -137,6 +137,7 @@
 		<h5 class="my-2">Personer att hantera</h5>
 		<div class="row pl-2">
 			<button type="button" class="btn btn-sm btn-primary m-2" id="addList" onclick="addListModal.show();">Lägg till...</button>
+			<p class="m-2">Till <a href="" onclick="showOverview();return false;">Närvaro</a></p>
 		</div>
 		<div class="row pl-2">
 			<p class="m-2" id="personsList">Inga personer inlagda</p>
@@ -160,9 +161,6 @@
 		  </ul>
 		<div class="row pl-2">
 			<p class="m-2"></p>
-		</div>
-		<div class="row pl-2">
-			<p class="m-2">Till <a href="" onclick="showOverview();return false;">Närvaro</a></p>
 		</div>
 
 		<!--<small class="form-text text-muted">En person per rad. Förändring i textrutan ovan rensar alla ifylld händelser i närvaroöversikten! Lägg till ev. övriga personer nedan istället.</small>-->
@@ -215,6 +213,7 @@
 			} else {
 				showOverview();
 			}
+			updatePersonStats();
 		
 			//state.loadAndShowState();
 		
