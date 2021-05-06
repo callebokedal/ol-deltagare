@@ -34,8 +34,8 @@
 		<% 
 		var persons = data.persons;
 		_.forEach(persons, function(person) { 
-		%><tr class="runner" data-hidden="<%= person.hidden %>" data-run-status="<%= person.run ? person.run:'unknown' %>">
-			<td class="name"><span><%= person.name %></span><%= data.showClasses ? '<small class="text-muted d-block-lg ml-1">'+ person.class +'</small>': '' %></td>
+		%><tr class="runner"  data-here-status="<%= person.status ? person.status:'unknown' %>"  data-run-status="<%= person.run ? person.run:'unknown' %>">
+			<td class="name"><span><%= person.name %></span><small class="text-muted d-block-lg ml-1"><%= person.class %></small></td>
 			<td class="status text-center" style="cursor: pointer;" onclick="changePersonStatus($(this).parent());"><%= getPersonStatusIcon(person.status) %></td>
 			<td class="run text-center<%= person.status == 'nothere' ? ' disabled':'' %>" style="cursor: pointer;" onclick="changeRunStatus($(this).parent());"><%= getRunStatusIcon(person.run) %></td>
 		</tr>
@@ -126,7 +126,7 @@
 			</div>
 		</div>-->
 		<h5 class="my-2">Inställningar</h5>
-		<div class="custom-control custom-switch mt-2">
+		<div class="custom-control custom-switch mt-2 d-none">
 			<input type="checkbox" class="custom-control-input" id="settingsDetails">
 			<label class="custom-control-label" for="settingsDetails">Visa klasser</label>
 		</div>
@@ -194,11 +194,14 @@
 			
 			// Init
 			var params = new URLSearchParams(document.location.search);
+			var save = false;
 			if (params.has("data")) {
 				if (document.location.hash!="#imported") {
 					// Data to import
 					console.log("Try to import data");
+					localStorage.setItem("ol-state", VIEWS.OVERVIEW);
 					importData();
+					save = true;
 				} else {
 					console.log("Data already imported");
 					var personsLoaded = getDataFromLocalStorage();
@@ -216,6 +219,12 @@
 				showSettings();
 			} else {
 				showOverview();
+				if(save) {
+					// Must save imported data
+					saveCheckData();
+					console.log("data saved first time")
+				}
+
 			}
 			updatePersonStats();
 		
