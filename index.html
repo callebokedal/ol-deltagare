@@ -116,6 +116,24 @@
 		</div>
 	</div>
 
+	<!-- Modal for report -->
+	<div class="modal" tabindex="-1" id="reportModal">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Närvarande idag</h5>
+				</div>
+				<div class="modal-body">
+					<div id="reportedHere"></div>
+					<small class="form-text text-muted">Registrera i <a href="https://orientering.sjovalla.se" target="_blank">Idrott Online</a> (enklast med dator). Samma inloggning som Eventor</small>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="reportModal.hide();">Stäng</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<div id="settingsContainer" class="p-2" style="display: none;">
 		<!--<div id="classes">
 			<div class="input-group">
