@@ -5,34 +5,11 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<title>OL-deltagande</title>
 	<link href="lib/css/bootstrap_4.4.1_css_bootstrap.min.css" rel="stylesheet">
-	<link rel="icon" href="lib/img/favicon.ico">
+	<link href="lib/css/style.css" rel="stylesheet">
+	<link rel="icon" href="lib/img/favicon.svg">
+	<!--<link rel="icon" href="lib/img/favicon.ico">-->
 	<link rel="apple-touch-icon" href="lib/img/favicon.ico">
-	<script
-	src="https://code.jquery.com/jquery-3.3.1.min.js"
-	integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-	crossorigin="anonymous"></script>
-	<style>
-		textarea.noscrollbars {
-			overflow: hidden;
-			width: 300px;
-			height: 200px;
-		}
-		tr.runner.out td.name {
-			color: #ffc107;
-		}
-		tr.runner.home td.name {
-			color: #28a745;
-		}
-		tr.runner.nothere td.name {
-			color: #6c757d;
-		}
-		tr.runner td.disabled {
-			color: #6c757d;	
-		}
-		/*tr.runner.nothere td small {
-			color: #ee1111;
-		}*/
-	</style>
+	<script src="lib/js/jquery-3.6.0.min.js" charset="UTF-8"></script>
 </head>
 <body>
 
@@ -44,16 +21,28 @@
 		<div class="collapse navbar-collapse" id="navbarNav">
 			<ul class="navbar-nav">
 				<li class="nav-item active" id="overviewNav">
-					<a class="nav-link" onclick="toggleView('overview');return false;">Närvaro</a>
+					<a class="nav-link" onclick="showOverview();return false;">Närvaro</a>
 				</li>
 				<li class="nav-item" id="settingsNav">
-					<a class="nav-link" onclick="toggleView('settings');return false;">Inställningar</a>
+					<a class="nav-link" onclick="showSettings();return false;">Inställningar</a>
 				</li>
 			</ul>
 		</div>
 	</nav>
 
-	<div id="overviewContainer">
+	<script type="text/template" id="personsChecklistTemplate">
+		<% 
+		var persons = data.persons;
+		_.forEach(persons, function(person) { %>
+		<tr class="runner" data-here-status="<%= person.status ? person.status:'unknown' %>" data-run-status="<%= person.run ? person.run:'unknown' %>">
+			<td class="name"><span><%= person.name %></span><%= data.showClasses ? '<small class="text-muted d-block-lg ml-1">'+ person.class +'</small>': '' %></td>
+			<td class="status text-center" style="cursor: pointer;" onclick="changePersonStatus($(this).parent());"><%= getPersonStatusIcon(person.status) %></td>
+			<td class="run text-center" style="cursor: pointer;" onclick="changeRunStatus($(this).parent());"><%= getRunStatusIcon(person.run) %></td>
+		</tr>
+		<% }); %>
+	</script>
+
+	<div id="overviewContainer" style="display: none;">
 
 		<table class="table table-sm table-striped table-dark" id="overviewTable">
 		<thead class="thead-dark">
@@ -63,10 +52,10 @@
 				<th class="text-center">Ute/Mål</th>
 			</tr>
 		</thead>
-		<tbody id="personList"></tbody>
+		<tbody id="personsChecklist"></tbody>
 		</table>
 
-		<div id="startInfo" class="ml-4 d-none">Lägg till personer under <a href="#" onclick="toggleView('settings');return false;">Inställningar</a> i menyn.</div>
+		<div id="startInfo" class="ml-4 d-none">Lägg till personer under <a href="#" onclick="showSettings();return false;">Inställningar</a> i menyn.</div>
 		<div id="personStats" class="ml-4"></div>
 
 		<div class="row d-flex flex-row-reverse align-items-center p-2">
@@ -77,9 +66,13 @@
 		<div class="row">
 			<textarea class="invisible text-muted ml-4 mr-4 mb-8 w-100" id="createReport"></textarea>
 		</div>
+		<div class="row p-4">
+			<p class="m-2">Till <a href="#" onclick="showSettings();return false;">Inställningar</a></p>
+		</div>
 
 	</div>
 
+	<!-- Modal for sharing -->
 	<div class="modal" tabindex="-1" id="shareModal">
 		<div class="modal-dialog">
 			<div class="modal-content">
@@ -98,7 +91,31 @@
 		</div>
 	</div>
 
-	<div id="settingsContainer" class="p-2">
+	<!-- Modal for adding list of persons -->
+	<div class="modal" tabindex="-1" id="addListModal">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Lägg till personer</h5>
+				</div>
+				<div class="modal-body">
+					<div id="names">
+						<div class="input-group">
+							<textarea id="personData" class="form-control noscrollbars" aria-label="Personer" placeholder="Namn;Klass"></textarea>
+							<!-- <textarea id="personData" class="form-control noscrollbars" aria-label="Personer" placeholder="Namn;Klass" onkeyup="autoGrow(this);"></textarea> -->
+						</div>
+					</div>
+					<small class="form-text text-muted">En person per rad. Lägg till semikolon (;) för att ange eventuell klass/notering (Ex: "Leif Andersson;Gul")</small>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" onclick="addList();">Lägg till</button>
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="addListModal.hide();">Avbryt</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="settingsContainer" class="p-2" style="display: none;">
 		<!--<div id="classes">
 			<div class="input-group">
 				<div class="input-group-prepend">
@@ -107,20 +124,6 @@
 				<textarea id="banorData" class="form-control" aria-label="Banor"></textarea>
 			</div>
 		</div>-->
-		<h5 class="my-2">Personer att hantera</h5>
-		<div id="names">
-			<div class="input-group">
-				<textarea id="personData" class="form-control noscrollbars" aria-label="Personer" placeholder="Namn;Klass" onkeyup="autoGrow(this);"></textarea>
-			</div>
-		</div>
-		<small class="form-text text-muted">En person per rad. Lägg till semikolon (;) för att ange eventuell klass/notering (Ex: "Leif Andersson;Gul")</small>
-
-		<!--<small class="form-text text-muted">En person per rad. Förändring i textrutan ovan rensar alla ifylld händelser i närvaroöversikten! Lägg till ev. övriga personer nedan istället.</small>-->
-		<!--<div class="row d-flex flex-row-reverse p-2">
-			<button type="button" class="btn btn-primary mr-2">Spara</button>
-			<button type="button" class="btn btn-secondary mr-2">Avbryt</button>
-		</div>-->
-
 		<h5 class="my-2">Inställningar</h5>
 		<div class="custom-control custom-switch mt-2">
 			<input type="checkbox" class="custom-control-input" id="settingsDetails">
@@ -130,6 +133,44 @@
 			<input type="checkbox" class="custom-control-input" id="settingsLargeTable">
 			<label class="custom-control-label" for="settingsLargeTable">Visa liten tabell</label>
 		</div>
+
+		<h5 class="my-2">Personer att hantera</h5>
+		<div class="row pl-2">
+			<button type="button" class="btn btn-sm btn-primary m-2" id="addList" onclick="addListModal.show();">Lägg till...</button>
+		</div>
+		<div class="row pl-2">
+			<p class="m-2" id="personsList">Inga personer inlagda</p>
+		</div>
+
+		<script type="text/template" id="personListTemplate">
+			<% _.forEach(persons, function(person) { %>
+			<div>
+				<div><%= person.name %> <span class="small"><%= person.class %></span> <a href="javascript:deletePerson('<%= person.name %>');">Ta bort<a></div>
+			</div>
+			<% }); %>
+		</script>
+
+		<h5 class="my-2">För att hämta från Eventor</h5>
+		<ul class="list-group">
+			<!--<li class="list-group-item">Klicka på <a href="javascript:getEventorPersons();">mig</a></li>-->
+			<li class="list-group-item">1. Förutsättning: Se till att ha följande länk <a href="javascript:(function(){var s='';document.querySelectorAll('#main%20h3%20~%20table%20tbody%20tr:nth-child(1n+1)%20td:nth-child(-n+2)').forEach((tds,idx)=>{if(idx%2==0){s+=tds.innerHTML+';'}else{s+=tds.innerHTML+'\n'}});var%20node=document.createElement('textarea');node.id='tmpExtra';node.value=s;node.innerText=s;var%20targetNode=document.getElementById('main');var%20config={attributes:false,childList:true,subtree:true};var%20callback=function(mutationsList,observer){for(let%20mutation%20of%20mutationsList){if(mutation.type==='childList'){var%20node=document.getElementById('tmpExtra');node.select();document.execCommand('copy');console.log('Attendances%20copied%20into%20clipboard');observer.disconnect()}}};const%20observer=new%20MutationObserver(callback);observer.observe(targetNode,config);document.querySelector('#main').appendChild(node);alert('De anmälda är kopierade. Gå tillbaka till närvarosidan och klistra in!');})();">länk</a> som ett bokmärke</li>
+			<li class="list-group-item">2. Gå till önskad aktivitet i <a href="https://eventor.orientering.se/Activities?organisationId=321" target="_blank">Eventor</a></li>
+			<li class="list-group-item">3. Klicka på bokmärket (som kopierar de anmälda i rätt format åt dig)</li>
+			<li class="list-group-item">4. Välj <span class="badge badge-primary btn" onclick="addListModal.show();">Lägg till..</span> och klistra in</li>
+		  </ul>
+		<div class="row pl-2">
+			<p class="m-2"></p>
+		</div>
+		<div class="row pl-2">
+			<p class="m-2">Till <a href="" onclick="showOverview();return false;">Närvaro</a></p>
+		</div>
+
+		<!--<small class="form-text text-muted">En person per rad. Förändring i textrutan ovan rensar alla ifylld händelser i närvaroöversikten! Lägg till ev. övriga personer nedan istället.</small>-->
+		<!--<div class="row d-flex flex-row-reverse p-2">
+			<button type="button" class="btn btn-primary mr-2">Spara</button>
+			<button type="button" class="btn btn-secondary mr-2">Avbryt</button>
+		</div>-->
+
 
 		<!--<textarea id="debugPersonData" class="form-control mt-5" readonly></textarea>-->
 
@@ -145,526 +186,14 @@
 	<script src="lib/js/purify.min.js"></script>
 	<script src="lib/js/moment.js"></script>
 	<script src="lib/js/locale/sv.js" charset="UTF-8"></script>
+	<script src="lib/js/lodash.min.js"></script>
+	<script src="lib/js/svg-icons.js" charset="UTF-8"></script>
+	<script src="lib/js/app.js" charset="UTF-8"></script>
 	<script>
-		'use strict';
-
-		moment.locale('sv');
-		let safe = DOMPurify.sanitize
-
-		let data = {
-			persons: []
-		}
-
-		const checkIcon = '<svg class="bi bi-check mr-2 text-success" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
-				<path fill-rule="evenodd" d="M13.854 3.646a.5.5 0 010 .708l-7 7a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L6.5 10.293l6.646-6.647a.5.5 0 01.708 0z" clip-rule="evenodd"/>\
-			</svg>'
-		const noCheckIcon = '<svg class="bi bi-x mr-2 text-danger" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
-				<path fill-rule="evenodd" d="M11.854 4.146a.5.5 0 010 .708l-7 7a.5.5 0 01-.708-.708l7-7a.5.5 0 01.708 0z" clip-rule="evenodd"/>\
-				<path fill-rule="evenodd" d="M4.146 4.146a.5.5 0 000 .708l7 7a.5.5 0 00.708-.708l-7-7a.5.5 0 00-.708 0z" clip-rule="evenodd"/>\
-			</svg>'
-		const personHereIcon = '<svg class="bi bi-person-check-fill text-success" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
-				<path fill-rule="evenodd" d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zm5-6a3 3 0 100-6 3 3 0 000 6zm9.854-2.854a.5.5 0 010 .708l-3 3a.5.5 0 01-.708 0l-1.5-1.5a.5.5 0 01.708-.708L12.5 7.793l2.646-2.647a.5.5 0 01.708 0z" clip-rule="evenodd"/>\
-			</svg>'
-
-		const personRunningIcon = '<svg class="bi bi-compass text-warning" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
-			  <path fill-rule="evenodd" d="M8 15.016a6.5 6.5 0 100-13 6.5 6.5 0 000 13zm0 1a7.5 7.5 0 100-15 7.5 7.5 0 000 15z" clip-rule="evenodd"/>\
-			  <path d="M6 1a1 1 0 011-1h2a1 1 0 010 2H7a1 1 0 01-1-1zm.94 6.44l4.95-2.83-2.83 4.95-4.95 2.83 2.83-4.95z"/>\
-			</svg>'
-
-		const returnIcon = '<svg class="bi bi-bullseye text-success" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
-			  <path fill-rule="evenodd" d="M8 13A5 5 0 108 3a5 5 0 000 10zm0 1A6 6 0 108 2a6 6 0 000 12z" clip-rule="evenodd"/>\
-			  <path fill-rule="evenodd" d="M8 11a3 3 0 100-6 3 3 0 000 6zm0 1a4 4 0 100-8 4 4 0 000 8z" clip-rule="evenodd"/>\
-			</svg>'
-
-		const personUnknownIcon = '<svg class="bi bi-question" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
-				<path d="M5.25 6.033h1.32c0-.781.458-1.384 1.36-1.384.685 0 1.313.343 1.313 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.007.463h1.307v-.355c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.326 0-2.786.647-2.754 2.533zm1.562 5.516c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>\
-			</svg>'
-
-		const personUnknownIconOld = '<svg class="bi bi-person text-warning" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
-				<path fill-rule="evenodd" d="M13 14s1 0 1-1-1-4-6-4-6 3-6 4 1 1 1 1h10zm-9.995-.944v-.002.002zM3.022 13h9.956a.274.274 0 00.014-.002l.008-.002c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664a1.05 1.05 0 00.022.004zm9.974.056v-.002.002zM8 7a2 2 0 100-4 2 2 0 000 4zm3-2a3 3 0 11-6 0 3 3 0 016 0z" clip-rule="evenodd"/>\
-			</svg>'
-		const personNotHereIcon = '<svg class="bi bi-person-dash-fill text-danger" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
-				<path fill-rule="evenodd" d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zm5-6a3 3 0 100-6 3 3 0 000 6zm5-.5a.5.5 0 01.5-.5h4a.5.5 0 010 1h-4a.5.5 0 01-.5-.5z" clip-rule="evenodd"/>\
-			</svg>'
-		const exportIcon = '<svg class="bi bi-clipboard mr-2" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">\
-			  <path fill-rule="evenodd" d="M4 1.5H3a2 2 0 00-2 2V14a2 2 0 002 2h10a2 2 0 002-2V3.5a2 2 0 00-2-2h-1v1h1a1 1 0 011 1V14a1 1 0 01-1 1H3a1 1 0 01-1-1V3.5a1 1 0 011-1h1v-1z" clip-rule="evenodd"/>\
-			  <path fill-rule="evenodd" d="M9.5 1h-3a.5.5 0 00-.5.5v1a.5.5 0 00.5.5h3a.5.5 0 00.5-.5v-1a.5.5 0 00-.5-.5zm-3-1A1.5 1.5 0 005 1.5v1A1.5 1.5 0 006.5 4h3A1.5 1.5 0 0011 2.5v-1A1.5 1.5 0 009.5 0h-3z" clip-rule="evenodd"/>\
-			</svg>'
-
-		// Eventor selector
-		// document.querySelectorAll("#main h3 ~ table tbody tr:nth-child(1n+1) td:nth-child(-n+2)")
-
-		let eventorPersons = () => {
-			let result = ""
-			let list = document.querySelectorAll("#main h3 ~ table tbody tr:nth-child(1n+1) td:nth-child(-n+2)")
-			for (let i = 0; i < list.length; i+=2) {
-				//copyItems.push(items[i])
-				result += list[i] + ";" + list[i+1] + "\n"
-			}
-			console.log(result)
-		}
-
-		let parseLine = (line) => {
-			if(line != "") {
-				line = line.trim()
-				if (line.includes(";")) {
-					return line.split(';')
-				} else {
-					return [line, ""]
-				}
-			}
-			return []
-		}
-
-		let isPersonHere = (el) => { return el.getAttribute("data-here-status") == "here" }
-		let isPersonNotHere = (el) => { return el.getAttribute("data-here-status") == "nothere" }
-		let isPersonUnknown = (el) => { return el.getAttribute("data-here-status") == "unknown" }
-		let setPersonHere = (el) => {
-			el.setAttribute("data-here-status", "here")
-			el.innerHTML = getPersonStatusIcon("here")
-		}
-		let setPersonNotHere = (el) => {
-			el.setAttribute("data-here-status", "nothere")
-			$(el).parent().toggleClass("nothere", true)
-			$(el).parent().find("td small").toggleClass("d-none", true)
-			$(el).parent().find("td.run").toggleClass("disabled", true)
-			el.innerHTML = getPersonStatusIcon("nothere")
-		}
-		let setPersonUnknown = (el) => {
-			el.setAttribute("data-here-status", "unknown")
-			$(el).parent().toggleClass("nothere", false)
-			$(el).parent().find("td small").toggleClass("d-none", false)
-			$(el).parent().find("td.run").toggleClass("disabled", false)
-			el.innerHTML = getPersonStatusIcon("unknown")
-		}
-
-		let getPersonStatusIcon = (status) => {
-			if(status == "here") {
-				return personHereIcon
-			} else if(status == "nothere") {
-				return personNotHereIcon
-			} else {
-				return personUnknownIcon
-			}
-		}
-		let changePersonStatus = (el) => {
-			//console.log(el)
-			let status = el.getAttribute("data-here-status")
-			//console.log("Here: " + status)
-			if(status == "unknown") {
-				setPersonHere(el)
-			} else if(status == "here") {
-				setPersonNotHere(el)
-			} else {
-				setPersonUnknown(el)
-			}
-			updatePersonStats()
-		}
-		let getRunStatusIcon = (status) => {
-			if(status == "out") {
-				return personRunningIcon
-			} else if(status == "home") {
-				return returnIcon
-			} else {
-				return personUnknownIcon
-			}
-		}
-		let changeRunStatus = (el) => {
-			let status = el.getAttribute("data-run-status")
-			//console.log("Running: " + status)
-			if(status == "unknown") {
-				el.setAttribute("data-run-status", "out")
-				$(el).parent().toggleClass("out", true)
-				el.innerHTML = getRunStatusIcon("out")
-				let statusEl = $(el).parent().find("td.status")[0]
-				if(isPersonUnknown(statusEl)) {
-					setPersonHere(statusEl)
-				}
-			} else if(status == "out") {
-				el.setAttribute("data-run-status", "home")
-				$(el).parent().toggleClass("out", false)
-				$(el).parent().toggleClass("home", true)
-				el.innerHTML = getRunStatusIcon("home") 
-			} else {
-				el.setAttribute("data-run-status", "unknown")
-				$(el).parent().toggleClass("home", false)
-				el.innerHTML = getRunStatusIcon("unknown")
-			}
-			updatePersonStats()
-		}
-
-		let shareData = () => {
-
-			let data = {};
-			data.persons = [];
-
-			let personList = document.querySelectorAll("#personList tr.runner");
-			personList.forEach((el) => {
-				// Create small "objects"
-				// Format: '<person>|<class>|<here or not>|<out running or not>'
-				let person = "";
-				person = el.querySelector("td.name span").innerHTML.trim().replace(";","") + ";";
-				if(el.querySelector("td.name small")) {
-					//p.c = el.querySelector("td.name small").innerHTML.trim();
-					person += el.querySelector("td.name small").innerHTML.trim() + ";";
-				} else {
-					person += ";";
-				}
-				//p.s = el.querySelector("td.status").dataset['hereStatus'];
-				//p.r = el.querySelector("td.run").dataset['runStatus'];
-				person += el.querySelector("td.status").dataset['hereStatus'] + ";"; 
-				person += el.querySelector("td.run").dataset['runStatus'];
-				data.persons.push(person);
-			});
-			//console.log("Data to export: ", btoa(JSON.stringify(data)));
-			
-			var url = new URL(document.location);
-			//console.log(url.protocol + "//" + url.host + url.pathname);
-			let shareLink = url.protocol + "//" + url.host + url.pathname + "?data=" + encodeURI(btoa(JSON.stringify(data)));
-			//console.log("Link to share, encoded: " + encodeURI(shareLink));
-
-			let a = document.createElement('a');
-			a.setAttribute('href', encodeURI(shareLink));
-			a.innerHTML = "Länk att dela (kopiera mig)";
-			document.getElementById("shareLink").innerHTML = "";
-			document.getElementById("shareLink").appendChild(a);
-			shareModal.show();
-		}
-
-		let createReport = () => {
-			let personList = document.querySelectorAll("#personList tr td.status")
-
-			let here = ""
-			let counter = 0
-			personList.forEach((el) => {
-				if(isPersonHere(el)) {
-					here += $(el).parent().find("td.name span").text() + "\n"
-					counter++;
-				} 
-			});
-			here = counter + " st personer var närvarande\n" + here
-
-			let ed = document.getElementById("createReport")
-			$(ed).toggleClass("invisible", false);
-			ed.value = here;
-			//autoGrow(ed);
-			ed.select();
-			document.execCommand('copy');
-			clearSelection()
-
-			$("#exportMessage").toggleClass("invisible", false);
-			setTimeout(function() { 
-				$("#exportMessage").toggleClass("invisible", true);
-			}, 5000);
-
-			setTimeout(function() { 
-				$(ed).toggleClass("invisible", true);
-			}, 10000);
-
-		}
-
-		let clearSelection = () => {
-			if (document.selection) {
-				document.selection.empty();
-			}
-			else if (window.getSelection) {
-				window.getSelection().removeAllRanges();
-			}
-		}
-
-		let updatePersonStats = () => {
-			state.saveData()
-			let html = "Kvar ute i skogen: " + $("#personList tr td[data-run-status='out']").length + "<br>"
-			html += "Närvarande: " + $("#personList tr td[data-here-status='here']").length + " (" + $("#personList tr td[data-here-status='unknown']").length + ' oklara)<br>'
-			html += "Ej närvarande: " + $("#personList tr td[data-here-status='nothere']").length 
-			document.getElementById("personStats").innerHTML = html
-		}
-
-		let getCurrentData = () => {
-			console.log("getCurrentData")
-			let currentPersons = []
-			let currentPersonList = document.querySelectorAll("#personList tr")
-			currentPersonList.forEach((row) => {
-				let person = {}
-				person.name =  safe($(row).children("td.name").children("span").text())
-				person.class =  $(row).children("td.name").children("small").length ? $(row).children("td.name").children("small").text() : ""
-				person.status = $(row).children("td.status")[0].getAttribute("data-here-status")
-				person.run = $(row).children("td.run")[0].getAttribute("data-run-status")
-				currentPersons.push(person)
-			}); 
-			return currentPersons
-		}
-
-		// Import data from external part
-		let importData = () => {
-			let url = new URL(document.location);
-			let params = new URLSearchParams(url.search);
-
-			if (params.has("data")) {
-			
-				let dataStr = safeDecode(params.get("data"));
-				let data = JSON.parse(dataStr);
-				console.log("Imported data: ", data);
-
-				// Convert to workable object
-				let currentPersons = []
-				data.persons.forEach((str) => {
-					// Expected format: '<person>;<class>;<here or not>;<out running or not>'
-					let p = str.split(";");
-					let person = {}
-					person.name = p[0];
-					person.class = p[1];
-					person.status = p[2];
-					person.run = p[3];
-					currentPersons.push(person);
-				}); 
-				console.log("currentPersons: ", currentPersons);
-
-				// Init page
-				// TODO: Improve later
-				//state._updateState(VIEWS.OVERVIEW, currentPersons);
-				//let url = console.log(url.protocol + "//" + url.host + url.pathname)
-				//let newUrl = new URL(url.protocol + "//" + url.host + url.pathname);
-				//document.location = newUrl.href;
-
-				//$("#overviewTable").toggleClass("table-sm", document.getElementById("settingsLargeTable").checked)
-				_renderPersons(currentPersons, data.persons);
-
-				// Mark import done
-				document.location.hash="imported";
-				console.log("Import completed!");
-			} else {
-				console.info("No data to import");
-			}
-		}
-
-		// Display people and their status
-		let _displayOverview = (data) => {
-			
-			$("#overviewTable").toggleClass("table-sm", document.getElementById("settingsLargeTable").checked)
-
-			// Merge current overview <-> person list
-			// Create model
-			let currentPersons = getCurrentData();
-			//console.log("currentPersons:")
-			//console.log(currentPersons)
-
-			// Data list
-			/*let dataPersonLines = getPersonData().split("\n").sort();
-			dataPersonLines.forEach((line, idx) => {
-				let data = parseLine(line)
-
-			});*/
-
-			// Merge
-			let personLines = getPersonData().split("\n").sort();
-
-			console.log("_displayOverview - data: ", data);
-			if(data) {
-				currentPersons = data;
-				personLines = [];
-				currentPersons.forEach((el) => {
-					//console.log(el.name + "fooo")
-					personLines.push(el.name + ";" + el.class);
-				})
-			}
-
-			_renderPersons(currentPersons, personLines);
-		}
-
-		let _renderPersons = (currentPersons, personLines) => {
-			
-			let html = ""
-			let showClasses = document.getElementById("settingsDetails").checked
-
-			//console.log(personLines.length)
-
-			///console.log('personLines:' + (personLines==""))
-			console.log("_renderPersons - _renderPersons: ", personLines);
-			if(personLines != "") { // personLines.length > 0
-				$("#startInfo").toggleClass("d-none", true)
-				$("#personStats").toggleClass("d-none", false)
-				personLines.forEach((line, idx) => {
-					let data = parseLine(line)
-
-					console.log("_renderPersons - data: ", data);
-
-					let name = data[0]
-					let className = data[1] ? data[1] : "";
-					let status = data[2] ? data[2] : "unknown";
-					let run = data[3] ? data[3] : "unknown";
-
-					const found = currentPersons.find(element => element.name == name);
-					if(found) {
-						status = found.status;
-						run = found.run;
-					}
-
-					if(data) {
-						html += '<tr class="runner">\
-							<td class="name"><span>' + name + '</span>' + (showClasses ? '<small class="text-muted d-block-lg ml-1">' + className +	'</small>': '') + '</td>\
-							<td class="status text-center" style="cursor: pointer;" data-here-status="' + status + '" onclick="changePersonStatus(this)">' + getPersonStatusIcon(status) + '</td>\
-							<td class="run text-center" style="cursor: pointer;" data-run-status="' + run + '" onclick="changeRunStatus(this)">' + getRunStatusIcon(run) + '</td>\
-						</tr>'
-					}
-					/*if(data) {
-						html += '<tr class="runner">\
-							<td class="name"><span>' + data[0] + '</span> ' + (document.getElementById("settingsDetails").checked ? '<small class="text-muted d-block-lg ml-1">' + data[1] +	'</small>': '') + '</td>\
-							<td class="status text-center" style="cursor: pointer;" data-here-status="unknown" onclick="changePersonStatus(this)">' + personUnknownIcon + '</td>\
-							<td class="run text-center" style="cursor: pointer;" data-run-status="unknown" onclick="changeRunStatus(this)">' + personUnknownIcon + '</td>\
-						</tr>'	
-					}*/
-				})	
-			} else {
-				$("#startInfo").toggleClass("d-none", false)
-				$("#personStats").toggleClass("d-none", true)
-			}
-
-			// Redraw
-			document.getElementById("personList").innerHTML = html;
-			console.log("Redraw", data);
-
-			updatePersonStats();
-		}
-
-		let _displaySettings = () => {
-			//console.log("_displaySettings")
-		}
-
-		let toggleView = (view) => {
-			state.toggleView(view)
-		}
-
-		let getTimeStamp = () => {
-			var d = new Date()
-			return d.getFullYear() + d.getMonth().toString().padStart("2", "0") + d.getDate().toString().padStart("2", "0") + "_" + d.getHours().toString().padStart("2", "0") + d.getMinutes().toString().padStart("2", "0")
-		}
-
-		let safeEncode = (decoded) => {return window.btoa(safe(decoded))}
-		let safeDecode = (encoded) => {return safe(window.atob(encoded))}
-
-		const VIEWS = {
-			OVERVIEW: "overview", // View for persons
-			SETTINGS: "settings"	// Settings, export/import
-		}
-
-		let setPersonDataAttr = (attribute, value) => {
-			let personData = document.getElementById("personData")
-			personData.setAttribute(attribute, safeEncode(value))
-		}
-		let getPersonDataAttr = (attribute) => {
-			return safeDecode(document.getElementById("personData").getAttribute(attribute))
-		}
-		// Get cached data from DOM
-		let getPersonDataCache = () => {
-			return getPersonDataAttr("data-person-list")
-		}
-		// Get current data from textarea
-		let getPersonData = () => {
-			return document.getElementById("personData").value
-		}
-
-		let getCurrentDataForStorage = () => {
-			let data = getCurrentData();
-			return JSON.stringify(data);
-		}
-
-		// State controller
-		let state = {
-			_view: VIEWS.OVERVIEW,
-			_data: "",
-			toggleView: (view) => {
-				if(view == "settings") {
-
-					//var c = getPersonDataCache();
-					//console.log("Got persons from cache: ", c);
-
-					// Save copy of persondata
-					setPersonDataAttr("data-person-list", personData.value)
-
-					state.viewSettings();
-				} else {
-					// Overview
-
-					// Load persondata from settings
-					let personDataCached = getPersonDataCache();
-					let personData = document.getElementById("personData").value
-					if(personDataCached != personData) {
-						// Unsaved changes
-						//console.log("Unsaved changes")
-						//alert("new updates")
-					}
-					//_updateOverview(personData)
-					state.viewOverview();
-				}
-			},
-			viewOverview: (data) => {
-				state._updateState(VIEWS.OVERVIEW, getCurrentDataForStorage());
-				$('#overviewNav').toggleClass('active',true);
-				$('#settingsNav').toggleClass('active',false);
-				$("#overviewContainer").show();
-				$("#settingsContainer").hide();
-				_displayOverview(data)
-			},
-			viewSettings: () => {
-				state._updateState(VIEWS.SETTINGS, getCurrentDataForStorage());
-				$('#overviewNav').toggleClass('active',false);
-				$('#settingsNav').toggleClass('active',true);
-				$("#settingsContainer").show();
-				$("#overviewContainer").hide();
-				_displaySettings()
-			},
-			_updateState: (view, data) => {
-				state._view = view
-				state._data = data
-				localStorage.setItem("ol-state", state._view)
-				localStorage.setItem("ol-stateData", state._data)
-			},
-			// Load save state and show according to this
-			isStateSaved: () => {
-				return localStorage.getItem("ol-state") != null
-			},
-			saveData: () => {
-				let encoded = getCurrentDataForStorage()
-				localStorage.setItem("ol-stateData", encoded)
-			},
-			//_loadData: () => {
-			//	let decoded = safeDecode(localStorage.getItem("ol-stateData"))
-			//},
-			loadAndShowState: () => {
-				// [{"name":"Eric","class":"","status":"unknown","run":"unknown"},{"name":"Olle","class":"","status":"unknown","run":"unknown"}]
-				if(state.isStateSaved()) {
-					state._view = safe(localStorage.getItem("ol-state"))
-					state._data = JSON.parse( localStorage.getItem("ol-stateData") )
-					if(state._view == VIEWS.OVERVIEW) {
-						state.viewOverview(state._data)
-					} else if (state._view == VIEWS.SETTINGS) {
-						state.viewSettings()
-					} else {
-						console.log("Unsupported view")
-					}
-				} else {
-					state._view = VIEWS.OVERVIEW
-					//state._data = ""
-					state.viewOverview()
-				}
-			}
-		}
-
-		function autoGrow (oField) {
-			if (oField.scrollHeight > oField.clientHeight) {
-				oField.style.height = oField.scrollHeight + "px";
-			}
-		}
-
-		let shareModal = new bootstrap.Modal(document.getElementById('shareModal'), {
-			keyboard: true,
-			focus: true
-		});
-
 		$( document ).ready(function() {
-			console.log("ready!");
-
+			console.log("Ready!");
+			
+			// Init
 			var params = new URLSearchParams(document.location.search);
 			if (params.has("data")) {
 				if (document.location.hash!="#imported") {
@@ -678,14 +207,23 @@
 				console.log("No data to import")
 			}
 
-			state.loadAndShowState();
-
+			var view = localStorage.getItem("ol-state");
+			var personsLoaded = getDataFromLocalStorage();
+			appdata.persons = personsLoaded;
+			if(view == VIEWS.SETTINGS) {
+				showSettings();
+			} else {
+				showOverview();
+			}
+		
+			//state.loadAndShowState();
+		
 			//document.getElementById("export").innerHTML = exportIcon + "Exportera"
-
+		
 			//window.onbeforeunload = function() {
 			//	return "Om du laddar om kommer inmatad data försvinna!";
 			//}
-
+		
 		});
 	</script>
 </body>
