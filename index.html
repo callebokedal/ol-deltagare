@@ -4,10 +4,10 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<title>OL-deltagande</title>
+	<link href="lib/css/bootstrap-icons.css" rel="stylesheet">
 	<link href="lib/css/bootstrap_4.4.1_css_bootstrap.min.css" rel="stylesheet">
 	<link href="lib/css/style.css" rel="stylesheet">
 	<link rel="icon" href="lib/img/favicon.svg">
-	<!--<link rel="icon" href="lib/img/favicon.ico">-->
 	<link rel="apple-touch-icon" href="lib/img/favicon.ico">
 	<script src="lib/js/jquery-3.6.0.min.js" charset="UTF-8"></script>
 </head>
@@ -33,18 +33,27 @@
 	<script type="text/template" id="personsChecklistTemplate">
 		<% 
 		var persons = data.persons;
+		/* var hide = document.getElementById("hideCompleted").checked; */
 		_.forEach(persons, function(person) { 
-		%><tr class="runner"  data-here-status="<%= person.status ? person.status:'unknown' %>"  data-run-status="<%= person.run ? person.run:'unknown' %>">
-			<td class="name"><span><%= person.name %></span><small class="text-muted d-block-lg ml-1"><%= person.class %></small></td>
-			<td class="status text-center" style="cursor: pointer;" onclick="changePersonStatus($(this).parent());"><%= getPersonStatusIcon(person.status) %></td>
-			<td class="run text-center<%= person.status == 'nothere' ? ' disabled':'' %>" style="cursor: pointer;" onclick="changeRunStatus($(this).parent());"><%= getRunStatusIcon(person.run) %></td>
-		</tr>
+			%><tr class="runner" data-hidden="adad" data-here-status="<%= person.status ? person.status:'unknown' %>"  data-run-status="<%= person.run ? person.run:'unknown' %>">
+				<td class="name"><span><%= person.name %></span><small class="text-muted d-block-lg ml-1"><%= person.class %></small></td>
+				<td class="status text-center" style="cursor: pointer;" onclick="changePersonStatus($(this).parent());"><%= getPersonStatusIcon(person.status) %></td>
+				<td class="run text-center<%= person.status == 'nothere' ? ' disabled':'' %>" style="cursor: pointer;" onclick="changeRunStatus($(this).parent());"><%= getRunStatusIcon(person.run) %></td>
+			</tr>
 		<% }); %>
+	</script>
+
+	<script type="text/template" id="personStatsTemplate">
+		<div class="list-group w-100 shadow-sm">
+			<div class="list-group-item p-2 d-flex bg-light"><i class="bi-tree-fill text-success mr-1"></i>Kvar ute i skogen: <span class="ml-auto"><%= out %> st<%= out == "0"?"<i class='bi-check text-success ml-1'></i>":"" %></span></div>
+			<div class="list-group-item p-2 d-flex bg-light"><i class="bi-person-check-fill text-success mr-1"></i>Närvarande: <span class="ml-auto"><%= here %> st (<%= unknown %> st okända)</span></div>
+			<div class="list-group-item p-2 d-flex bg-light"><i class="bi-person-x-fill text-danger mr-1"></i>Frånvarande: <span class="ml-auto"><%= nothere %> st</span></div>
+		</div>
 	</script>
 
 	<div id="overviewContainer" style="display: none;">
 
-		<table class="table table-sm table-striped table-dark" id="overviewTable">
+		<table class="table table-sm table-striped table-dark mb-1" id="overviewTable">
 		<thead class="thead-dark">
 			<tr>
 				<th scope="col">Namn</th>
@@ -55,16 +64,18 @@
 		<tbody id="personsChecklist"></tbody>
 		</table>
 
-		<div id="startInfo" class="ml-4 d-none">Lägg till personer under <a href="#" onclick="showSettings();return false;">Inställningar</a> i menyn.</div>
-		<div class="row ml-4" id="personStats"></div>
-		<div class="row p-4">
+		<div id="startInfo" class="row ml-4 d-none">Lägg till personer under <a href="#" onclick="showSettings();return false;">Inställningar</a> i menyn.</div>
+		<div class="row m-2" id="personStats"></div>
+		<div class="row m-2">
 			<p class="m-2">Till <a href="#" onclick="showSettings();return false;">Inställningar &raquo;</a></p>
 		</div>
-
-		<div class="row d-flex flex-row-reverse align-items-center p-2">
-			<!--<button type="button" class="btn btn-danger mr-4" id="share" onclick="hideCompleted();">Göm färdiga</button>-->
+		<div class="row d-flex flex-row-reverse align-items-center m-2">
 			<button type="button" class="btn btn-primary mr-4" id="share" onclick="shareData();">Dela...</button>
 			<button type="button" class="btn btn-primary mr-4" id="report" onclick="createReport();">Rapport</button>
+			<div class="custom-control custom-switch mt-2 mr-4 d-none" onclick="hideCompleted();">
+				<input type="checkbox" class="custom-control-input" id="hideCompleted">
+				<label class="custom-control-label" for="hideCompleted">Dölj klara</label>
+			</div>
 			<small id="reportMessage" class="text-muted invisible mr-2">Närvarande personer har kopierats till urklipp - så du kan nu klistra in det i ett meddelande, mejl etc.</small>
 		</div>
 		<div class="row">
@@ -158,26 +169,30 @@
 			<button type="button" class="btn btn-sm btn-primary m-2" id="addList" onclick="addListModal.show();">Lägg till...</button>
 			<p class="m-2">Till <a href="" onclick="showOverview();return false;">Närvaro &raquo;</a></p>
 		</div>
-		<div class="row pl-2">
-			<p class="m-2" id="personsList">Inga personer inlagda</p>
+		<div class="row px-2">
+			<div class="m-2" id="personsList">Inga personer inlagda</div>
 		</div>
 
 		<script type="text/template" id="personListTemplate">
-			<% _.forEach(persons, function(person) { %>
-			<div>
-				<div><%= person.name %> <span class="small"><%= person.class %></span> <a class="text-danger" href="javascript:deletePerson('<%= person.name %>');">Ta bort<a></div>
-			</div>
-			<% }); %>
+			<ul class="list-group shadow-sm">
+				<% _.forEach(persons, function(person) { %>
+					<li class="list-group-item d-flex align-items-center p-2 bg-light">
+						<span><%= person.name %></span>
+						<span class="small text-muted ml-1"><%= person.class %></span>
+						<a class="text-danger ml-auto" href="javascript:deletePerson('<%= person.name %>');">Ta bort</a>
+					</li>
+				<% }); %>
+			</ul>
 		</script>
 
 		<h5 class="my-2">För att hämta från Eventor</h5>
-		<ul class="list-group">
+		<ul class="list-group shadow-sm">
 			<!--<li class="list-group-item">Klicka på <a href="javascript:getEventorPersons();">mig</a></li>-->
-			<li class="list-group-item">1. Förutsättning: Se till att ha följande länk <a href="javascript:(function(){var s='';document.querySelectorAll('#main%20h3%20~%20table%20tbody%20tr:nth-child(1n+1)%20td:nth-child(-n+2)').forEach((tds,idx)=>{if(idx%2==0){s+=tds.innerHTML+';'}else{s+=tds.innerHTML+'\n'}});var%20node=document.createElement('textarea');node.id='tmpExtra';node.value=s;node.innerText=s;var%20targetNode=document.getElementById('main');var%20config={attributes:false,childList:true,subtree:true};var%20callback=function(mutationsList,observer){for(let%20mutation%20of%20mutationsList){if(mutation.type==='childList'){var%20node=document.getElementById('tmpExtra');node.select();document.execCommand('copy');console.log('Attendances%20copied%20into%20clipboard');observer.disconnect()}}};const%20observer=new%20MutationObserver(callback);observer.observe(targetNode,config);document.querySelector('#main').appendChild(node);alert('De anmälda är kopierade. Gå tillbaka till närvarosidan och klistra in!');})();">länk</a> som ett bokmärke</li>
-			<li class="list-group-item">2. Gå till önskad aktivitet i <a href="https://eventor.orientering.se/Activities?organisationId=321" target="_blank">Eventor</a></li>
-			<li class="list-group-item">3. Klicka på bokmärket (som kopierar de anmälda i rätt format åt dig)</li>
-			<li class="list-group-item">4. Välj <span class="badge badge-primary btn" onclick="addListModal.show();">Lägg till..</span> och klistra in</li>
-		  </ul>
+			<li class="list-group-item p-2 bg-light">1. Förutsättning: Se till att ha följande länk <a href="javascript:(function(){var s='';document.querySelectorAll('#main%20h3%20~%20table%20tbody%20tr:nth-child(1n+1)%20td:nth-child(-n+2)').forEach((tds,idx)=>{if(idx%2==0){s+=tds.innerHTML+';'}else{s+=tds.innerHTML+'\n'}});var%20node=document.createElement('textarea');node.id='tmpExtra';node.value=s;node.innerText=s;var%20targetNode=document.getElementById('main');var%20config={attributes:false,childList:true,subtree:true};var%20callback=function(mutationsList,observer){for(let%20mutation%20of%20mutationsList){if(mutation.type==='childList'){var%20node=document.getElementById('tmpExtra');node.select();document.execCommand('copy');console.log('Attendances%20copied%20into%20clipboard');observer.disconnect()}}};const%20observer=new%20MutationObserver(callback);observer.observe(targetNode,config);document.querySelector('#main').appendChild(node);alert('De anmälda är kopierade. Gå tillbaka till närvarosidan och klistra in!');})();">länk</a> som ett bokmärke</li>
+			<li class="list-group-item p-2 bg-light">2. Gå till önskad aktivitet i <a href="https://eventor.orientering.se/Activities?organisationId=321" target="_blank">Eventor</a></li>
+			<li class="list-group-item p-2 bg-light">3. Klicka på bokmärket (som kopierar de anmälda i rätt format åt dig)</li>
+			<li class="list-group-item p-2 bg-light">4. Välj <span class="badge badge-primary btn" onclick="addListModal.show();">Lägg till..</span> och klistra in</li>
+		</ul>
 		<div class="row pl-2">
 			<p class="m-2"></p>
 		</div>
@@ -201,6 +216,7 @@
 
 	<script src="lib/js/bootstrap.4.4.1.min.js"></script>
 	<script src="lib/js/purify.min.js"></script>
+	<script src="lib/js/lz-string.js"></script>
 	<script src="lib/js/moment.js"></script>
 	<script src="lib/js/locale/sv.js" charset="UTF-8"></script>
 	<script src="lib/js/lodash.min.js"></script>
@@ -214,6 +230,13 @@
 			var params = new URLSearchParams(document.location.search);
 			var save = false;
 			if (params.has("data")) {
+				/*let hide = localStorage.getItem("ol-hide");
+				if(hide) {
+					document.getElementById("hideCompleted").checked = "checked";
+				} else {
+					document.getElementById("hideCompleted").checked = "";
+				}*/
+
 				if (document.location.hash!="#imported") {
 					// Data to import
 					console.log("Try to import data");

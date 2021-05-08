@@ -6,9 +6,6 @@ textarea.noscrollbars {
 tr.runner[data-here-status="here"] td.name {
     color: #fff;
 }
-/*tr.runner[data-here-status="nothere"] td.run svg {
-    display: none;
-}*/
 tr.runner[data-run-status="home"] td.name span {
     color: #28a745;
     text-decoration: line-through;
@@ -29,6 +26,6 @@ tr.runner[data-here-status="nothere"] td.name span {
     color: #6c757d;
     text-decoration: line-through;
 }
-/*tr.runner.nothere td small {
-    color: #ee1111;
-}*/
+tr.runner[data-hidden="hide"] {
+    display: none;
+}
