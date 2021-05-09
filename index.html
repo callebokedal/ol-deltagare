@@ -44,10 +44,18 @@
 
 	<script type="text/template" id="personStatsTemplate">
 		<div class="list-group w-100 shadow-sm">
-			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1 text-success"><%= personRunningIcon %></span>Kvar ute i skogen: <span class="ml-auto"><%= out %> st<%= out == "0"?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></span></div>
-			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= notStartedIcon %></span>Ej startat: <span class="ml-auto"><%= notstarted %> st<%= unknown == "0"?"":" (" + unknown + " st okända)" %></span></div>
-			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= personHereIcon %></span>Närvarande: <span class="ml-auto"><%= here %> st</span></div>
-			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= personNotHereIcon %></span>Frånvarande: <span class="ml-auto"><%= nothere %> st<%= unknown == "0"?"":" (" + unknown + " st okända)" %></span></div>
+			<div class="list-group-item p-2 d-flex bg-light"><span 
+				class="mr-1 text-success"><%= personRunningIcon %></span>Ute i skogen: <span 
+				class="ml-auto"><%= out %> st</span><%= (out == "0" && notstarted == "0" && unknown == "0")?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></div>
+			<div class="list-group-item p-2 d-flex bg-light"><span 
+				class="mr-1"><%= notStartedIcon %></span>Ej startat: <span 
+				class="ml-auto"><%= notstarted %> st</span><%= notstarted == "0"?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></div>
+			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= personUnknownIcon %></span>Okända: <span 
+				class="ml-auto"><%= unknown %> st</span><%= unknown == "0"?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></div>
+			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= personHereIcon %></span>Närvarande: <span 
+				class="ml-auto"><%= here %> st</span><%= unknown == "0"?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></div>
+			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= personNotHereIcon %></span>Frånvarande: <span 
+				class="ml-auto"><%= nothere %> st</span><%= unknown == "0"?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></div>
 		</div>
 	</script>
 
@@ -57,8 +65,8 @@
 		<thead class="thead-dark">
 			<tr>
 				<th scope="col">Namn</th>
-				<th class="text-center">Här</th>
-				<th class="text-center">Ute/Mål</th>
+				<th class="text-center">Här?</th>
+				<th class="text-center">Ute/Mål?</th>
 			</tr>
 		</thead>
 		<tbody id="personsChecklist"></tbody>
@@ -70,9 +78,9 @@
 			<p class="m-2">Till <a href="#" onclick="showSettings();return false;">Inställningar &raquo;</a></p>
 		</div>
 		<div class="row d-flex flex-row-reverse align-items-center m-2">
-			<button type="button" class="btn btn-primary mr-4" id="share" onclick="shareData();">Dela...</button>
-			<button type="button" class="btn btn-primary mr-4" id="report" onclick="createReport();">Rapport</button>
-			<div class="custom-control custom-switch mt-2 mr-4 d-none" onclick="hideCompleted();">
+			<button type="button" class="btn btn-primary" id="share" onclick="shareData();">Dela...</button>
+			<button type="button" class="btn btn-primary mr-2" id="report" onclick="createReport();">Rapport</button>
+			<div class="custom-control custom-switch mt-2 mr-2 d-none" onclick="hideCompleted();">
 				<input type="checkbox" class="custom-control-input" id="hideCompleted">
 				<label class="custom-control-label" for="hideCompleted">Dölj klara</label>
 			</div>
@@ -81,6 +89,7 @@
 		<div class="row">
 			<textarea class="invisible text-muted ml-4 mr-4 mb-8 w-100" id="createReport"></textarea>
 		</div>
+		
 
 	</div>
 
@@ -90,7 +99,6 @@
 			<div class="modal-content">
 				<div class="modal-header">
 					<h5 class="modal-title">Dela</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
 				<div class="modal-body">
 					<p>Kopiera länken och dela (via SMS, Slack, e-post)</p>
