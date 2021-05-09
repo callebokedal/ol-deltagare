@@ -33,3 +33,7 @@ tr.runner[data-here-status="nothere"] td.name span {
 tr.runner[data-hidden="hide"] {
     display: none;
 }
+#shareDataHolder {
+    font-size: 0.7rem;
+    height: 14rem;
+}

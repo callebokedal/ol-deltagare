@@ -89,8 +89,6 @@
 		<div class="row">
 			<textarea class="invisible text-muted ml-4 mr-4 mb-8 w-100" id="createReport"></textarea>
 		</div>
-		
-
 	</div>
 
 	<!-- Modal for sharing -->
@@ -101,8 +99,11 @@
 					<h5 class="modal-title">Dela</h5>
 				</div>
 				<div class="modal-body">
-					<p>Kopiera länken och dela (via SMS, Slack, e-post)</p>
-					<p id="shareLink"></p>
+					<p>Följande information har kopierats - redo för att skickas via Slack, e-post eller liknande</p>
+					<div class="input-group">
+						<textarea id="shareDataHolder" class="form-control" rows=15></textarea>
+					</div>
+					<small>Vid eventuella problem - kopiera texten manuellt</small>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="shareModal.hide();">Stäng</button>
