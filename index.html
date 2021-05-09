@@ -247,11 +247,11 @@
 				} else {
 					console.log("Data already imported");
 					var personsLoaded = getDataFromLocalStorage();
-					appdata.persons = personsLoaded;
+					appdata.persons = personsLoaded || [];
 				}
 			} else {
 				var personsLoaded = getDataFromLocalStorage();
-				appdata.persons = personsLoaded;
+				appdata.persons = personsLoaded || [];
 				console.log("No data to import");
 			}
 
