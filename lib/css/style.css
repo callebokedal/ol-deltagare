@@ -10,7 +10,11 @@ tr.runner[data-run-status="home"] td.name span {
     color: #28a745;
     text-decoration: line-through;
 }
-tr.runner[data-run-status="out"] td.name {
+tr.runner[data-run-status="home"] td.run {
+    color: #28a745;
+}
+tr.runner[data-run-status="out"] td.name, 
+tr.runner[data-run-status="out"] td.run {
     color: #ffc107;
 }
 tr.runner td.disabled {
