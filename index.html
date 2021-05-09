@@ -75,20 +75,21 @@
 
 		<div id="startInfo" class="row ml-4 d-none">Lägg till personer under <a href="#" onclick="showSettings();return false;">Inställningar</a> i menyn.</div>
 		<div class="row m-2" id="personStats"></div>
-		<div class="row m-2">
-			<p class="m-2">Till <a href="#" onclick="showSettings();return false;">Inställningar &raquo;</a></p>
-		</div>
-		<div class="row d-flex flex-row-reverse align-items-center m-2">
-			<button type="button" class="btn btn-primary" id="share" onclick="shareData();">Dela...</button>
+		<div class="row m-2 d-flex">
+			<span class="m-2 flex-grow-1">Till <a href="#" onclick="showSettings();return false;">Inställningar &raquo;</a></span>
 			<button type="button" class="btn btn-primary mr-2" id="report" onclick="createReport();">Rapport</button>
+			<button type="button" class="btn btn-primary" id="share" onclick="shareData();">Dela...</button>
 			<div class="custom-control custom-switch mt-2 mr-2 d-none" onclick="hideCompleted();">
 				<input type="checkbox" class="custom-control-input" id="hideCompleted">
 				<label class="custom-control-label" for="hideCompleted">Dölj klara</label>
 			</div>
-			<small id="reportMessage" class="text-muted invisible mr-2">Närvarande personer har kopierats till urklipp - så du kan nu klistra in det i ett meddelande, mejl etc.</small>
+			<!--<small id="reportMessage" class="text-muted invisible mr-2">Närvarande personer har kopierats till urklipp - så du kan nu klistra in det i ett meddelande, mejl etc.</small>-->
 		</div>
-		<div class="row">
+		<!--<div class="row">
 			<textarea class="invisible text-muted ml-4 mr-4 mb-8 w-100" id="createReport"></textarea>
+		</div>-->
+		<div class="row pl-2">
+			<small class="p-2 mx-2 app-version"></small>
 		</div>
 	</div>
 
@@ -176,8 +177,8 @@
 		</div>
 
 		<h5 class="my-2">Personer att hantera</h5>
-		<div class="row pl-2 align-middle">
-			<button type="button" class="btn btn-sm btn-primary m-2" id="addList" onclick="addListModal.show();">Lägg till...</button>
+		<div class="row ml-0 align-middle">
+			<button type="button" class="btn btn-sm btn-primary" id="addList" onclick="addListModal.show();">Lägg till...</button>
 			<p class="m-2">Till <a href="" onclick="showOverview();return false;">Närvaro &raquo;</a></p>
 		</div>
 		<div class="row px-2">
@@ -201,27 +202,11 @@
 			<li class="list-group-item p-2 bg-light">1. Förutsättning: Se till att ha följande länk <a href="javascript:(function(){var s='';document.querySelectorAll('#main%20h3%20~%20table%20tbody%20tr:nth-child(1n+1)%20td:nth-child(-n+2)').forEach((tds,idx)=>{if(idx%2==0){s+=tds.innerHTML+';'}else{s+=tds.innerHTML+'\n'}});var%20node=document.createElement('textarea');node.id='tmpExtra';node.value=s;node.innerText=s;var%20targetNode=document.getElementById('main');var%20config={attributes:false,childList:true,subtree:true};var%20callback=function(mutationsList,observer){for(let%20mutation%20of%20mutationsList){if(mutation.type==='childList'){var%20node=document.getElementById('tmpExtra');node.select();document.execCommand('copy');console.log('Attendances%20copied%20into%20clipboard');observer.disconnect()}}};const%20observer=new%20MutationObserver(callback);observer.observe(targetNode,config);document.querySelector('#main').appendChild(node);alert('De anmälda är kopierade. Gå tillbaka till närvarosidan och klistra in!');})();">länk</a> som ett bokmärke</li>
 			<li class="list-group-item p-2 bg-light">2. Gå till önskad aktivitet i <a href="https://eventor.orientering.se/Activities?organisationId=321" target="_blank">Eventor</a></li>
 			<li class="list-group-item p-2 bg-light">3. Klicka på bokmärket (som kopierar de anmälda i rätt format åt dig)</li>
-			<li class="list-group-item p-2 bg-light">4. Välj <span class="badge badge-primary btn" onclick="addListModal.show();">Lägg till..</span> och klistra in</li>
+			<li class="list-group-item p-2 bg-light">4. Välj <span class="badge badge-primary btn" onclick="addListModal.show();">Lägg till..</span> och klistra in resultatet</li>
 		</ul>
-		<div class="row pl-2">
-			<p class="m-2" id="version"></p>
+		<div class="row">
+			<small class="p-2 mx-2 app-version"></small>
 		</div>
-
-		<!--<small class="form-text text-muted">En person per rad. Förändring i textrutan ovan rensar alla ifylld händelser i närvaroöversikten! Lägg till ev. övriga personer nedan istället.</small>-->
-		<!--<div class="row d-flex flex-row-reverse p-2">
-			<button type="button" class="btn btn-primary mr-2">Spara</button>
-			<button type="button" class="btn btn-secondary mr-2">Avbryt</button>
-		</div>-->
-
-
-		<!--<textarea id="debugPersonData" class="form-control mt-5" readonly></textarea>-->
-
-		<!--<h5 class="my-2">Lägg till person</h5>
-		<div id="addPerson">
-			<div class="input-group">
-				<textarea id="personData" class="form-control" aria-label="Person" ></textarea>
-			</div>
-		</div>-->
 	</div>
 
 	<script src="lib/js/bootstrap.4.4.1.min.js"></script>
@@ -264,7 +249,9 @@
 				console.log("No data to import");
 			}
 
-			document.getElementById("version").innerHTML = ("Version: " + version);
+			document.querySelectorAll("small.app-version").forEach(el => {
+				el.innerHTML = "Version: " + version;
+			});
 
 			var view = localStorage.getItem("ol-state");
 			if(view == VIEWS.SETTINGS) {
@@ -279,15 +266,6 @@
 
 			}
 			updatePersonStats();
-		
-			//state.loadAndShowState();
-		
-			//document.getElementById("export").innerHTML = exportIcon + "Exportera"
-		
-			//window.onbeforeunload = function() {
-			//	return "Om du laddar om kommer inmatad data försvinna!";
-			//}
-		
 		});
 	</script>
 </body>
