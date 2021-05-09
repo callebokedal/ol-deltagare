@@ -45,6 +45,7 @@
 	<script type="text/template" id="personStatsTemplate">
 		<div class="list-group w-100 shadow-sm">
 			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1 text-success"><%= personRunningIcon %></span>Kvar ute i skogen: <span class="ml-auto"><%= out %> st<%= out == "0"?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></span></div>
+			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= notStartedIcon %></span>Ej startat: <span class="ml-auto"><%= notstarted %> st<%= unknown == "0"?"":" (" + unknown + " st okända)" %></span></div>
 			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= personHereIcon %></span>Närvarande: <span class="ml-auto"><%= here %> st</span></div>
 			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= personNotHereIcon %></span>Frånvarande: <span class="ml-auto"><%= nothere %> st<%= unknown == "0"?"":" (" + unknown + " st okända)" %></span></div>
 		</div>
