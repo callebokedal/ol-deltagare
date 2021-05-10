@@ -175,7 +175,7 @@
 		</div>
 	</div>
 
-	<div id="settingsContainer" class="container" style="display: none;">
+	<div id="settingsContainer" class="container-fluid" style="display: none;">
 		<!--<div id="classes">
 			<div class="input-group">
 				<div class="input-group-prepend">
@@ -211,7 +211,7 @@
 				<% _.forEach(persons, function(person) { %>
 					<li class="list-group-item d-flex align-items-center p-2 bg-light">
 						<span><%= person.name %></span>
-						<span class="small text-muted ml-1"><%= person.class %></span>
+						<span class="small text-muted mx-1"><%= person.class %></span>
 						<a class="btn btn-sm btn-danger ml-auto" href="javascript:deletePerson('<%= person.name %>');">Ta bort</a>
 					</li>
 				<% }); %>
