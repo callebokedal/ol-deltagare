@@ -157,7 +157,25 @@
 		</div>
 	</div>
 
-	<div id="settingsContainer" class="p-2" style="display: none;">
+	<!-- Modal for confirmation of removal -->
+	<div class="modal" tabindex="-1" id="confirmModal">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Ta bort?</h5>
+				</div>
+				<div class="modal-body">
+					<div id="confirmQuestion">Är du säker att du vill ta bort objektet?</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="confirmModal.hide();">Avbryt</button>
+					<button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="confirmationYes">Ta bort</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="settingsContainer" class="container" style="display: none;">
 		<!--<div id="classes">
 			<div class="input-group">
 				<div class="input-group-prepend">
@@ -177,8 +195,11 @@
 		</div>-->
 
 		<h5 class="my-2">Personer att hantera</h5>
+		<div class="row ml-0 pb-2">
+			<small>Aktuell lista: <strong id="currentList"></strong></small>
+		</div>
 		<div class="row ml-0 align-middle">
-			<button type="button" class="btn btn-sm btn-primary" id="addList" onclick="addListModal.show();">Lägg till...</button>
+			<button type="button" class="btn btn-sm btn-primary" id="addList" onclick="addListModal.show();">Lägg till personer</button>
 			<p class="m-2">Till <a href="" onclick="showOverview();return false;">Närvaro &raquo;</a></p>
 		</div>
 		<div class="row px-2">
@@ -191,19 +212,46 @@
 					<li class="list-group-item d-flex align-items-center p-2 bg-light">
 						<span><%= person.name %></span>
 						<span class="small text-muted ml-1"><%= person.class %></span>
-						<a class="text-danger ml-auto" href="javascript:deletePerson('<%= person.name %>');">Ta bort</a>
+						<a class="btn btn-sm btn-danger ml-auto" href="javascript:deletePerson('<%= person.name %>');">Ta bort</a>
 					</li>
 				<% }); %>
 			</ul>
 		</script>
 
 		<h5 class="my-2">Hämta personer från Eventor</h5>
-		<ul class="list-group shadow-sm">
-			<li class="list-group-item p-2 bg-light">1. Förutsättning: Se till att ha följande länk <a href="javascript:(function(){var s='';document.querySelectorAll('#main%20h3%20~%20table%20tbody%20tr:nth-child(1n+1)%20td:nth-child(-n+2)').forEach((tds,idx)=>{if(idx%2==0){s+=tds.innerHTML+';'}else{s+=tds.innerHTML+'\n'}});var%20node=document.createElement('textarea');node.id='tmpExtra';node.value=s;node.innerText=s;var%20targetNode=document.getElementById('main');var%20config={attributes:false,childList:true,subtree:true};var%20callback=function(mutationsList,observer){for(let%20mutation%20of%20mutationsList){if(mutation.type==='childList'){var%20node=document.getElementById('tmpExtra');node.select();document.execCommand('copy');console.log('Attendances%20copied%20into%20clipboard');observer.disconnect()}}};const%20observer=new%20MutationObserver(callback);observer.observe(targetNode,config);document.querySelector('#main').appendChild(node);alert('De anmälda är kopierade. Gå tillbaka till närvarosidan och klistra in!');})();">länk</a> som ett bokmärke</li>
-			<li class="list-group-item p-2 bg-light">2. Gå till önskad aktivitet i <a href="https://eventor.orientering.se/Activities?organisationId=321" target="_blank">Eventor</a></li>
-			<li class="list-group-item p-2 bg-light">3. Klicka på bokmärket (som kopierar de anmälda i rätt format åt dig)</li>
-			<li class="list-group-item p-2 bg-light">4. Välj <span class="badge badge-primary btn" onclick="addListModal.show();">Lägg till..</span> och klistra in resultatet</li>
-		</ul>
+		<div class="row ml-0 pb-2">
+			<small>Personer från aktiviteter i Eventor kan hämtas</small>
+		</div>
+		<div class="row m-0">
+			<ul class="list-group shadow-sm">
+				<li class="list-group-item p-2 bg-light small">1. Förutsättning: Se till att ha följande länk <a href="javascript:(function(){var s='';document.querySelectorAll('#main%20h3%20~%20table%20tbody%20tr:nth-child(1n+1)%20td:nth-child(-n+2)').forEach((tds,idx)=>{if(idx%2==0){s+=tds.innerHTML+';'}else{s+=tds.innerHTML+'\n'}});var%20node=document.createElement('textarea');node.id='tmpExtra';node.value=s;node.innerText=s;var%20targetNode=document.getElementById('main');var%20config={attributes:false,childList:true,subtree:true};var%20callback=function(mutationsList,observer){for(let%20mutation%20of%20mutationsList){if(mutation.type==='childList'){var%20node=document.getElementById('tmpExtra');node.select();document.execCommand('copy');console.log('Attendances%20copied%20into%20clipboard');observer.disconnect()}}};const%20observer=new%20MutationObserver(callback);observer.observe(targetNode,config);document.querySelector('#main').appendChild(node);alert('De anmälda är kopierade. Gå tillbaka till närvarosidan och klistra in!');})();">länk</a> som ett bokmärke</li>
+				<li class="list-group-item p-2 bg-light small">2. Gå till önskad aktivitet i <a href="https://eventor.orientering.se/Activities?organisationId=321" target="_blank">Eventor</a></li>
+				<li class="list-group-item p-2 bg-light small">3. Klicka på bokmärket (som kopierar de anmälda i rätt format åt dig)</li>
+				<li class="list-group-item p-2 bg-light small">4. Välj <span class="badge badge-primary btn" onclick="addListModal.show();">Lägg till..</span> och klistra in resultatet</li>
+			</ul>
+		</div>
+
+		<script type="text/template" id="storedListTemplate">
+			<ul class="list-group shadow-sm">
+				<% _.forEach(lists, function(list) { %>
+					<li class="list-group-item d-flex align-items-center p-2 bg-light">
+						<small class="small mr-auto"><%= list.name %></small>
+						<% if(current != list.key) { %>
+						<a class="btn btn-sm btn-primary mx-2" href="javascript:loadStoredList('<%= list.key %>');">Öppna</a>
+						<a class="btn btn-sm btn-danger" href="javascript:deleteStoredList('<%= list.key %>');">Ta&nbsp;bort</a>
+						<% } else { %>
+							<small>Aktuell lista</small>
+						<% } %>
+					</li>
+				<% }); %>
+			</ul>
+		</script>
+
+		<h5 class="my-2">Sparade listor</h5>
+		<div class="row ml-0 pb-2">
+			<small>Här visas de listor som sparats på denna enhet</small>
+		</div>
+		<div class="row m-0" id="storedList"></div>
 		<div class="row">
 			<small class="p-2 mx-2 app-version"></small>
 		</div>
@@ -220,6 +268,7 @@
 	<script>
 		$( document ).ready(function() {
 			console.log("Ready!");
+			//console.log("Current key: ", getCurrentStorageListKey());
 			
 			// Init
 			var params = new URLSearchParams(document.location.search);
@@ -235,7 +284,7 @@
 				if (document.location.hash!="#imported") {
 					// Data to import
 					console.log("Try to import data");
-					localStorage.setItem("ol-state", VIEWS.OVERVIEW);
+					localStorage.setItem(state_key, VIEWS.OVERVIEW);
 					importData();
 					save = true;
 				} else {
@@ -250,10 +299,10 @@
 			}
 
 			document.querySelectorAll("small.app-version").forEach(el => {
-				el.innerHTML = "Version: " + version;
+				el.innerHTML = "Version: <strong>" + version + "</strong><br>Aktuell lista: <strong>" + storageKeyToName(storage_key) +"</strong>";
 			});
 
-			var view = localStorage.getItem("ol-state");
+			var view = localStorage.getItem(state_key);
 			if(view == VIEWS.SETTINGS) {
 				showSettings();
 			} else {
@@ -263,7 +312,6 @@
 					saveCheckData();
 					console.log("data saved first time")
 				}
-
 			}
 			updatePersonStats();
 		});
