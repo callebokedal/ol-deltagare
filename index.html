@@ -243,12 +243,13 @@
 			<ul class="list-group shadow-sm">
 				<% _.forEach(lists, function(list) { %>
 					<li class="list-group-item d-flex align-items-center p-2 bg-light">
-						<small class="small mr-auto"><%= list.name %></small>
 						<% if(current != list.key) { %>
-						<a class="btn btn-sm btn-primary mx-2" href="javascript:loadStoredList('<%= list.key %>');">Öppna</a>
-						<a class="btn btn-sm btn-danger" href="javascript:deleteStoredList('<%= list.key %>');">Ta&nbsp;bort</a>
+							<small class="small mr-auto"><%= list.name %></small>
+							<a class="btn btn-sm btn-primary mx-2" href="javascript:loadStoredList('<%= list.key %>');">Öppna</a>
+							<a class="btn btn-sm btn-danger" href="javascript:deleteStoredList('<%= list.key %>');">Ta&nbsp;bort</a>
 						<% } else { %>
-							<a class="btn btn-sm btn-primary ml-2" href="javascript:changeCurrentList('<%= list.key %>');">Klona</a>
+							<a href="" onclick="showOverview();return false;"><small class="small mr-auto"><%= list.name %></small></a>
+							<a class="btn btn-sm btn-primary ml-2" href="javascript:cloneCurrentList('<%= list.key %>');">Klona</a>
 						<% } %>
 					</li>
 				<% }); %>
@@ -260,6 +261,9 @@
 			<small>Här visas de listor som sparats på denna enhet</small>
 		</div>
 		<div class="row m-0" id="storedList"></div>
+		<div class="row m-0 pb-2">
+			<a class="my-1 small" href="javascript:newEmptyList();">Skapa ny lista</a>
+		</div>
 
 		<h5 class="my-2">Hämta personer från Eventor</h5>
 		<div class="row ml-0 pb-2">
