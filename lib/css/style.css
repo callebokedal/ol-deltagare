@@ -33,7 +33,25 @@ tr.runner[data-here-status="nothere"] td.name span {
 tr.runner[data-hidden="hide"] {
     display: none;
 }
+tr.runner .status {
+    cursor: pointer;
+}
+tr.runner .run {
+    cursor: pointer;
+}
+tr.runner[data-here-status="nothere"] .run {
+    cursor: default;
+}
 #shareDataHolder {
     font-size: 0.7rem;
     height: 14rem;
+}
+#filter button {
+    border-color: #343a40;
+}
+#filter .updateFilter {
+    color: rgb(0, 86, 179);
+}
+table tr.odd {
+    background-color: rgba(255,255,255,.05);
 }

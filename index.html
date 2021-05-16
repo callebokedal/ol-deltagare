@@ -33,15 +33,31 @@
 		</div>
 	</nav>
 
-	<script type="text/template" id="personsChecklistTemplate">
+	<script type="text/template" id="personsChecklistTemplateOld">
 		<% 
 		var persons = data.persons;
 		/* var hide = document.getElementById("hideCompleted").checked; */
 		_.forEach(persons, function(person) { 
-			%><tr class="runner" data-hidden="adad" data-here-status="<%= person.status ? person.status:'unknown' %>"  data-run-status="<%= person.run ? person.run:'unknown' %>">
+			%><tr class="runner" data-hidden="x" data-here-status="<%= person.status ? person.status:'unknown' %>"  data-run-status="<%= person.run ? person.run:'unknown' %>">
 				<td class="name"><span><%= person.name %></span><small class="text-muted d-block-lg ml-1"><%= person.class %></small></td>
-				<td class="status text-center" style="cursor: pointer;" onclick="changePersonStatus($(this).parent());"><%= getPersonStatusIcon(person.status) %></td>
+				<td class="status text-center<%= person.status == 'here'?' text-success':(person.status == 'nothere'?' text-danger':' xx') %>" style="cursor: pointer;" onclick="changePersonStatus($(this).parent());"><%= getPersonStatusIcon(person.status) %></td>
 				<td class="run text-center<%= person.status == 'nothere' ? ' disabled':'' %>" style="cursor: pointer;" onclick="changeRunStatus($(this).parent());"><%= getRunStatusIcon(person.run) %></td>
+			</tr>
+		<% }); %>
+	</script>
+	
+	<script type="text/template" id="personsChecklistTemplate">
+		<% 
+		var persons = data.persons;
+		var odd = false;
+		_.forEach(persons, function(person) { 
+			if (!person.hidden) {
+				odd = !odd;
+			}
+			%><tr class="runner<%= odd ? ' odd':'' %><%= person.hidden ? ' d-none':'' %>" data-hidden="<%= person.hidden %>" data-here-status="<%= person.status ? person.status:'unknown' %>"  data-run-status="<%= person.run ? person.run:'unknown' %>">
+				<td class="name"><span><%= person.name %></span><small class="text-muted d-block-lg ml-1"><%= person.class %></small></td>
+				<td class="status text-center<%= person.status == 'here'?' text-success':(person.status == 'nothere'?' text-danger':' xx') %>" onclick="rotatePersonStatus($(this).parent());"><%= getPersonStatusIcon(person.status) %></td>
+				<td class="run text-center<%= person.status == 'nothere' ? ' disabled':'' %>" onclick="rotateRunStatus($(this).parent());"><%= getRunStatusIcon(person.run) %></td>
 			</tr>
 		<% }); %>
 	</script>
@@ -56,16 +72,16 @@
 				class="ml-auto"><%= notstarted %> st</span><%= notstarted == "0"?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></div>
 			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= personUnknownIcon %></span>Okända: <span 
 				class="ml-auto"><%= unknown %> st</span><%= unknown == "0"?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></div>
-			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= personHereIcon %></span>Närvarande: <span 
+			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1 text-success"><%= personHereIcon %></span>Närvarande: <span 
 				class="ml-auto"><%= here %> st</span><%= unknown == "0"?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></div>
-			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= personNotHereIcon %></span>Frånvarande: <span 
+			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1 text-danger"><%= personNotHereIcon %></span>Frånvarande: <span 
 				class="ml-auto"><%= nothere %> st</span><%= unknown == "0"?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></div>
 		</div>
 	</script>
 
 	<div id="overviewContainer" style="display: none;">
 
-		<table class="table table-sm table-striped table-dark mb-1" id="overviewTable">
+		<table class="table table-sm table-dark mb-1" id="overviewTable">
 		<thead class="thead-dark">
 			<tr>
 				<th scope="col">Namn</th>
@@ -75,6 +91,21 @@
 		</thead>
 		<tbody id="personsChecklist"></tbody>
 		</table>
+
+		<script type="text/template" id="filterTemplate">
+			<div class="d-flex w-100 align-items-center">
+				<div class="ml-2"><%= viewIcon %><span class="mr-1 ml-1">Visa:</span></div>
+				<div class="btn-group" role="group" aria-label="Filter rows" id="filterController">
+					<button type="button" onclick="updateFilter('here');" class="btn btn-sm bg-dark btn-secondary<%= here ? ' text-secondary':' text-success' %>"><%= personHereIcon %></button>
+					<button type="button" onclick="updateFilter('nothere');" class="btn btn-sm bg-dark btn-secondary<%= nothere ? ' text-secondary':' text-danger' %>"><%= personNotHereIcon %></button>
+					<button type="button" onclick="updateFilter('out');" class="btn btn-sm bg-dark btn-secondary<%= out ? ' text-secondary':' text-warning' %>"><%= personRunningIcon %></button>
+					<button type="button" onclick="updateFilter('home');" class="btn btn-sm bg-dark btn-secondary<%= home ? ' text-secondary':' text-success' %>"><%= returnIcon %></button>
+				</div>
+				<div class="ml-auto mr-2 updateFilter"><%= updateIcon %><a href="#" onclick="updateFilter();" class="ml-1">Uppdatera</a></div>
+			</div>
+		</script>
+
+		<div class="row m-2" id="filter"></div>
 
 		<div id="startInfo" class="row ml-4 d-none">Lägg till personer under <a href="#" onclick="showSettings();return false;">Inställningar</a> i menyn.</div>
 		<div class="row m-2" id="personStats"></div>
@@ -276,7 +307,6 @@
 				<li class="list-group-item p-2 bg-light small">4. Välj <span class="badge badge-primary btn" onclick="addListModal.show();">Lägg till..</span> och klistra in resultatet</li>
 			</ul>
 		</div>
-
 		<div class="row">
 			<small class="p-2 mx-2 mb-4 app-version"></small>
 		</div>
@@ -394,6 +424,9 @@
 				}
 			}
 			updatePersonStats();
+			//changePersonStatus(document.querySelectorAll("#personsChecklist")); //.forEach(el => {
+
+			//});
 			//showFirstHelp();
 		});
 	</script>
