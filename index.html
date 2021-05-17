@@ -48,12 +48,12 @@
 	
 	<script type="text/template" id="personsChecklistTemplate">
 		<% 
-		var persons = data.persons;
-		var odd = false;
+		let persons = data.persons;
+		let odd = false;
 		_.forEach(persons, function(person) { 
 			if (!person.hidden) {
 				odd = !odd;
-			}
+			} 
 			%><tr class="runner<%= odd ? ' odd':'' %><%= person.hidden ? ' d-none':'' %>" data-hidden="<%= person.hidden %>" data-here-status="<%= person.status ? person.status:'unknown' %>"  data-run-status="<%= person.run ? person.run:'unknown' %>">
 				<td class="name"><span><%= person.name %></span><small class="text-muted d-block-lg ml-1"><%= person.class %></small></td>
 				<td class="status text-center<%= person.status == 'here'?' text-success':(person.status == 'nothere'?' text-danger':' xx') %>" onclick="rotatePersonStatus($(this).parent());"><%= getPersonStatusIcon(person.status) %></td>
@@ -76,8 +76,11 @@
 				class="ml-auto"><%= here %> st</span><%= unknown == "0"?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></div>
 			<div class="list-group-item p-2 d-flex bg-light"><span class="mr-1 text-danger"><%= personNotHereIcon %></span>Frånvarande: <span 
 				class="ml-auto"><%= nothere %> st</span><%= unknown == "0"?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %></div>
+			
 		</div>
 	</script>
+	<!-- <...% <div class="list-group-item p-2 d-flex bg-light"><span class="mr-1"><%= hiddenIcon %></span>Dolda: <span 
+				class="ml-auto"><%= noOfHidden %> st</span><%= noOfHidden == 0?'<span class="ml-1 text-success">' + checkIcon + '</span>':"" %...></div> %> -->
 
 	<div id="overviewContainer" style="display: none;">
 
@@ -172,6 +175,17 @@
 			</div>
 		</div>
 	</div>
+
+	<script type="text/template" id="reportTemplate">
+		<!--<ul class="nav nav-tabs">
+			<li class="nav-item">
+				<a class="nav-link active" href="#">Lista</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#">Text</a>
+			</li>
+		</ul>-->
+	</script>
 
 	<!-- Modal for report -->
 	<div class="modal" tabindex="-1" id="reportModal">
@@ -348,7 +362,15 @@
 			</div>
 		</div>
 		<div class="card mb-2" style="width: 18rem;">
-			<img class="card-img-top" src="./lib/img/overview-stats.png" alt="Närvaro">
+			<img class="card-img-top" src="./lib/img/overview-filter.png" alt="Visa/Dölja">
+			<div class="card-body">
+				<h6 class="card-title">Visa/dölja</h6>
+				<p class="card-text small">Klicka för att visa/dölja olika typer av rader.</p>
+				<p class="card-text small">Aktuell data försvinner inte utan döljs enbart.</p>
+			</div>
+		</div>
+		<div class="card mb-2" style="width: 18rem;">
+			<img class="card-img-top" src="./lib/img/overview-stats.png" alt="Översikt">
 			<div class="card-body">
 				<h6 class="card-title">Översikt</h6>
 				<p class="card-text small">En sammanfattning uppdateras vid varje avprickning.</p>
