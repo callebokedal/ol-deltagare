@@ -311,10 +311,10 @@
 					<li class="list-group-item d-flex align-items-center p-2 bg-light">
 						<small class="small mr-auto"><%= list.name %></small>
 						<% if(current != list.key) { %>
-							<a class="btn btn-sm btn-primary mx-2" href="javascript:loadStoredList('<%= list.key %>');">Öppna</a>
-							<a class="btn btn-sm btn-danger" href="javascript:deleteStoredList('<%= list.key %>');">Ta&nbsp;bort</a>
+							<a class="btn btn-sm btn-primary mx-2" href="javascript:loadStoredList('<%- list.key %>');">Öppna</a>
+							<a class="btn btn-sm btn-danger" href="javascript:deleteStoredList('<%- list.key %>');">Ta&nbsp;bort</a>
 						<% } else { %>
-							<a class="btn btn-sm btn-primary ml-2" href="javascript:cloneCurrentList('<%= list.key %>');">Klona</a>
+							<a class="btn btn-sm btn-primary ml-2" href="javascript:cloneCurrentList('<%- list.key %>');">Klona</a>
 						<% } %>
 					</li>
 				<% }); %>
