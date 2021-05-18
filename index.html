@@ -241,6 +241,27 @@
 		</div>
 	</div>
 
+	<!--<script type="text/template" id="reportTemplate">
+		<div>Lite debug</div>
+	</script>-->
+
+	<!-- Modal for changing stored list -->
+	<div class="modal" tabindex="-1" id="debugModal">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Debug</h5>
+				</div>
+				<div class="modal-body">
+					<div id="debug"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="debugModal.hide();">Stäng</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<div id="settingsContainer" class="container-fluid" style="display: none;">
 		<!--<div id="classes">
 			<div class="input-group">
@@ -323,6 +344,9 @@
 		</div>
 		<div class="row">
 			<small class="p-2 mx-2 mb-4 app-version"></small>
+		</div>
+		<div class="row">
+			<a class="p-2 mx-2 mb-4" style="color:#fff;" href="" onclick="return debug();">Debug</a>
 		</div>
 	</div>
 
@@ -415,19 +439,19 @@
 
 				if (document.location.hash!="#imported") {
 					// Data to import
-					console.log("Try to import data");
+					//console.log("Try to import data");
 					localStorage.setItem(state_key, VIEWS.OVERVIEW);
 					importData();
 					save = true;
 				} else {
-					console.log("Data already imported");
+					//console.log("Data already imported");
 					var personsLoaded = getDataFromLocalStorage();
 					appdata.persons = personsLoaded || [];
 				}
 			} else {
 				var personsLoaded = getDataFromLocalStorage();
 				appdata.persons = personsLoaded || [];
-				console.log("No data to import");
+				//console.log("No data to import");
 			}
 
 			updatePageInfo();
